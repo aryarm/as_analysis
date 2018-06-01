@@ -1,0 +1,30 @@
+# This is the Snakemake configuration file that specifies paths and 
+# and options for the allele specific analysis pipeline.
+
+# TODO: consider using snakemake validation
+
+{
+    # The path to a text file specifying where to find read information for each sample.
+    # Each row in the sample file should represent a different sample.
+    # The sample file should have 6 columns:
+    #       <1000genomes_id> <unique_sample_id> <fastq1_dna_path> <fastq2_dna_path> <fastq1_rna_path> <fastq2_rna_path>
+    "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.txt",
+
+    # The path to a reference genome for DNA-seq alignment
+    "ref_genome" : "iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
+
+    # Paths to each of four GATK VariantRecalibrator files as described in https://software.broadinstitute.org/gatk/documentation/article.php?id=1259
+    # These can usually be obtained from the GATK Resource Bundle: https://software.broadinstitute.org/gatk/download/bundle
+    "hapmap" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/hapmap.vcf",
+    "omni" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/omni.vcf",
+    "1000G" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/1000G.vcf",
+    "dbSNP" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/dbsnp.vcf",
+
+    # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
+    # For example, a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
+    "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt",
+
+    # The path to your WASP directory.
+    # You can download WASP from https://github.com/bmvdgeijn/WASP
+    "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
+}
