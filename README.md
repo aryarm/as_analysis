@@ -1,7 +1,7 @@
 # as_analysis
 A pipeline for detecting allelic imbalance from DNA and RNA seq reads
 
-# Files
+# files
 ### final.bash
 A pipeline for getting counts of heterozygous sites, written in bash
 
