@@ -10,3 +10,9 @@ A snakemake pipeline for running final.bash and then analyzing counts of heteroz
 
 ### config.yaml
 Required input for the snakemake pipeline
+
+### allele_imbalance.r
+Defines a function for detecting allelic imbalance given count data
+
+### stats.r
+An R script that sets up the necessary data for calling allele_imbalance.r
