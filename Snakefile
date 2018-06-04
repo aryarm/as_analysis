@@ -275,7 +275,6 @@ def set_wasp_config():
     have to."""
     config['vcf_dir'] = "{config[output_dir]}/genotypes"
     config['snp_h5_dir'] = "{config[output_dir]}/genotypes/snp_h5"
-    config['wasp_dir'] = "{config[output_dir]}"
 
 
 rule vcf2h5:
