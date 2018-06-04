@@ -49,15 +49,6 @@ config['output_dir'] = "out"
 config['num_threads'] = 24
 
 
-def set_wasp_config():
-    """WASP needs some config values. Let's load them, so the user doesn't have
-    to."""
-    config['vcf_dir'] = "genotypes"
-    config['snp_h5_dir'] = "genotypes/snp_h5"
-
-
-
-
 rule all:
     input:
         expand(config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz",
@@ -208,8 +199,8 @@ rule variant_filter:
         1000G = config['1000G']
         dbsnp = config['dbSNP']
     output:
-        recal = config['output_dir'] + "/variant_filter/snps.recal"
-        tranches = config['output_dir'] + "/variant_filter/snps.tranches"
+        recal = config['output_dir'] + "/variant_filter/ALL.recal"
+        tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
     shell:
         "mkdir -p {config[output_dir]}/variant_filter; "
         "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
@@ -222,13 +213,76 @@ rule variant_filter:
 
 rule apply_variant_filter:
     """Create a file with only variants that have passed filtration"""
+    input:
+        ref = config['ref_genome']
+        vcf = rules.genotype.output
+        recal = rules.variant_filter.output.recal
+        tranches = rules.variant_filter.output.tranches
+    output:
+        config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz"
+    shell:
+        "gatk ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
+        "--ts-filter-level 97.5 --recal-file {input.recal} "
+        "--tranches-file {input.tranches} -O {output}"
+
+rule split_vcf_by_sample:
+    """Create VCF files for each sample from a single VCF file"""
+    input:
+        ref = config['ref_genome']
+        vcf = rules.apply_variant_filter.output
+    output:
+        config['output_dir'] + "/extract_gq/{sample}.vcf.gz"
+    shell:
+        "gatk SelectVariants -R {input.ref} -V {input.vcf} "
+        "-sn {sample} -O {output}"
+
+rule create_gq_files:
+    """Create tables containing GQ scores for each sample. The files will have
+    columns: CHROM, POS, REF, ALT, and {sample}.GQ"""
+    input:
+        ref = config['ref_genome']
+        vcf = rules.split_vcf_by_sample.output
+    output:
+        config['output_dir'] + "/extract_gq/{sample}.gq_subset.table"
+    shell:
+        "gatk VariantsToTable -R {input.ref} -V {input.vcf} "
+        "-F CHROM -F POS -F REF -F ALT -GF GQ "
+        "-O {output}"
+
+rule filter_hets:
+    """Extract heterozygotes from the filtered VCF file"""
+    input:
+        vcf = rules.apply_variant_filter.output
+    output:
+        config['output_dir'] + "/genotypes/ALL"
+    shell:
+        "SnpSift filter '(countHet() > 0) && (FILTER == 'PASS')' "
+        "<(zcat {input}) >{output}"
+
+rule split_final_vcf:
+    """Split the final VCF file by chromosome and gzip it for WASP"""
+    input:
+        vcf = rules.filter_hets.output
+    output:
+        config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz"
+    shell:
+        "SnpSift split {input}; "
+        "gzip {config[output_dir]}/genotypes/*.vcf"
+
+
+def set_wasp_config():
+    """WASP needs some config values. Let's load them, so the user doesn't
+    have to."""
+    config['vcf_dir'] = "{config[output_dir]}/genotypes"
+    config['snp_h5_dir'] = "{config[output_dir]}/genotypes/snp_h5"
+    config['wasp_dir'] = "{config[output_dir]}"
 
 
 rule vcf2h5:
     """Convert VCF data files to HDF5 format"""
     input:
         chrom = config['chrom_info'],
-        vcfs = glob.glob(config['vcf_dir'] + "/*chr*.vcf.gz")
+        vcfs = rules.split_final_vcf.output
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",

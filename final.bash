@@ -162,7 +162,7 @@ source deactivate py35
 # lastly, create a table with GQ scores from the filtered VCF for later analysis
 # the table will be tab separated and can be easily imported to R
 gatk VariantsToTable -R $ref_data/WholeGenomeFasta/genome.fa -V $main/variant_filter/snps.filter.vcf.gz -O gq_subset.table \
-	-F CHROM -F POS -F REF -F ALT -GF GQ --moltenize
+	-F CHROM -F POS -F REF -F ALT -GF GQ
 
 printf "\n________________________ DONE! ________________________\n"
 echo "The final file(s) with allele specific counts is in ${main}/WASP/as_counts"
