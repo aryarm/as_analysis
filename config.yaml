@@ -12,8 +12,10 @@
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.txt"
 
 # The path to a reference genome for DNA-seq alignment
-# currently, it is required that this reference genome be indexed for BWA
-"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
+"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
+
+# the path to an indexed reference genome for BWA
+"ref_genome_bwa" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
 
 # the path to an indexed reference genome for STAR
 "ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"

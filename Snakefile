@@ -44,19 +44,29 @@ def get_chromosomes():
     return chr_names
 
 
+"""WASP needs some config values. Let's load them, so the user doesn't
+have to."""
+config['vcf_dir'] = config['output_dir'] + "/genotypes"
+config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
+
+
 # rule all:
 #     input:
 #         expand(config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz",
 #                sample=read_samples().keys())
+
+# note to self - run the following to execute the pipeline:
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 >>${out_path}/out 2>&1 &
+
 rule all:
     input:
-        config['output_dir'] + "/dna_align/Jurkat1.sam"
+        config['snp_h5_dir'] + "/snp_index.h5"
 
 rule align_dna:
     """Align DNA reads using BWA-MEM. Note that we use -R to specify read group
     info for haplotype caller."""
     input:
-        ref = config['ref_genome'],
+        ref = config['ref_genome_bwa'],
         fastq1 = lambda wildcards: read_samples()[wildcards.sample][0][0],
         fastq2 = lambda wildcards: read_samples()[wildcards.sample][0][1]
     output:
@@ -78,7 +88,7 @@ rule sam_to_bam:
         config['output_dir'] + "/dna_align/{sample}.raw.bam"
     threads: config['num_threads']
     shell:
-        "samtools view -u -b -F 4 -q 20 -@ {threads} - - <{input} >{output}"
+        "samtools view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
 
 rule sort_bam_by_name:
     """Sort the bam output by name (not by coordinates yet)"""
@@ -88,7 +98,7 @@ rule sort_bam_by_name:
         config['output_dir'] + "/dna_align/{sample}.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools sort -n -@ {threads} - - <{input} >{output}"
+        "samtools sort -n -@ {threads} {input} >{output}"
 
 rule add_mate_info:
     """Use fixmate to fill in mate coordinates and mate related flags, since
@@ -100,7 +110,7 @@ rule add_mate_info:
         config['output_dir'] + "/dna_align/{sample}.mate.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools fixmate -m -@ {threads} - - <{input} >{output}"
+        "samtools fixmate -m -@ {threads} {input} {output}"
 
 rule sort_bam_by_coord:
     """Sort the bam output by coordinates. Needed for markdup use later on."""
@@ -110,7 +120,7 @@ rule sort_bam_by_coord:
         config['output_dir'] + "/dna_align/{sample}.coordSort.mate.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools sort -@ {threads} <{input} >{output}"
+        "samtools sort -@ {threads} -o {output} {input}"
 
 rule rm_dups:
     """Remove duplicates that may have occurred from PCR and index the
@@ -123,9 +133,8 @@ rule rm_dups:
     threads: config['num_threads']
     shell:
         "mkdir -p {config[output_dir]}/dna_align; "
-        "samtools markdup -@ {threads} <{input} {output.final_bam}; "
-        "samtools -b -@ {threads} {output.final_bam_index}"
-
+        "samtools markdup -@ {threads} {input} {output.final_bam}; "
+        "samtools index -b -@ {threads} {output.final_bam}"
 
 rule base_recal:
     """Recalibrate the base quality scores. They might be biased"""
@@ -136,7 +145,7 @@ rule base_recal:
     output:
         config['output_dir'] + "/base_recal/{sample}.recal_data.table"
     shell:
-        "mdkir -p {config[output_dir]}/base_recal; "
+        "mkdir -p {config[output_dir]}/base_recal; "
         "gatk BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
 
 rule apply_base_recal:
@@ -150,7 +159,6 @@ rule apply_base_recal:
     shell:
         "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
 
-
 rule haplotype:
     """Make a file with annotated variants"""
     input:
@@ -160,24 +168,21 @@ rule haplotype:
         config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
     shell:
         "gatk HaplotypeCaller "
-        "-R {input.ref} -I {input.bam} -O {output} -ERC GVCF"
+        "-R {input.ref} -I {input.bam} -O {output} -ERC GVCF "
         "-G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation"
-
-# NOTE: combine and genotype are untested!
 
 rule combine:
     """Combine the g.vcf files"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.haplotype.output
+        vcf = expand(rules.haplotype.output, sample=read_samples().keys())
     output:
-        config['output_dir'] + "haplotype/ALL.g.vcf.gz"
+        config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
     run:
-        vcf_params = " ".join(['-V'+file for file in input.vcf])
+        vcf_params = " ".join(['-V '+file for file in input.vcf])
         shell(("gatk CombineGVCFs -R {input.ref} -O {output} "
                "-G StandardAnnotation -G AS_StandardAnnotation "
-               +vcf_params+
-               " {input.vcfs}"))
+               + vcf_params))
 
 rule genotype:
     """Perform joint genotyping on all of the samples"""
@@ -187,7 +192,7 @@ rule genotype:
     output:
         config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz"
     shell:
-        "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
+        "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
         "-G StandardAnnotation -G AS_StandardAnnotation"
 
 rule variant_filter:
@@ -209,7 +214,7 @@ rule variant_filter:
         "--resource omni,known=false,training=true,truth=false,prior=12.0:{input.omni} "
         "--resource 1000G,known=false,training=true,truth=false,prior=10.0:{input.project1000G} "
         "--resource dbsnp,known=true,training=false,truth=false,prior=2.0:{input.dbsnp} "
-        "-an QD -an FS -an MQ -an MQRankSum -an ReadPosRankSum -an SOR"
+        "-an QD -an FS -an MQ -an MQRankSum -an ReadPosRankSum -an SOR "
         "-mode SNP -O {output.recal} --tranches-file {output.tranches}"
 
 rule apply_variant_filter:
@@ -235,14 +240,14 @@ rule split_vcf_by_sample:
         config['output_dir'] + "/extract_gq/{sample}.vcf.gz"
     shell:
         "gatk SelectVariants -R {input.ref} -V {input.vcf} "
-        "-sn {sample} -O {output}"
+        "-sn {wildcards.sample} -O {output}"
 
 rule create_gq_files:
     """Create tables containing GQ scores for each sample. The files will have
     columns: CHROM, POS, REF, ALT, and {sample}.GQ"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.split_vcf_by_sample.output
+        vcf = expand(rules.split_vcf_by_sample.output, sample=read_samples().keys())
     output:
         config['output_dir'] + "/extract_gq/{sample}.gq_subset.table"
     shell:
@@ -257,48 +262,39 @@ rule filter_hets:
     output:
         config['output_dir'] + "/genotypes/ALL"
     shell:
-        "SnpSift filter '(countHet() > 0) && (FILTER == 'PASS')' "
-        "<(zcat {input}) >{output}"
+        "zcat {input} | "
+        "SnpSift filter \"(countHet() > 0) && (FILTER == 'PASS')\" "
+        " >{output}"
 
 rule split_final_vcf:
     """Split the final VCF file by chromosome and gzip it for WASP"""
     input:
         vcf = rules.filter_hets.output
     output:
-        config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz"
+        dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
     shell:
         "SnpSift split {input}; "
         "gzip {config[output_dir]}/genotypes/*.vcf"
 
 
-def set_wasp_config():
-    """WASP needs some config values. Let's load them, so the user doesn't
-    have to."""
-    config['vcf_dir'] = "{config[output_dir]}/genotypes"
-    config['snp_h5_dir'] = "{config[output_dir]}/genotypes/snp_h5"
-
-
-# set_wasp_config()
-
-
-# rule vcf2h5:
-#     """Convert VCF data files to HDF5 format"""
-#     input:
-#         chrom = config['chrom_info'],
-#         vcfs = rules.split_final_vcf.output
-#     output:
-#         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
-#         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-#         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-#     shell:
-#         "mkdir -p {config[snp_h5_dir]}; "
-#         "{config[wasp_dir]}/snp2h5/snp2h5 "
-#         "  --chrom {input.chrom} "
-#         "  --format vcf "
-#         "  --snp_index {output.snp_index} "
-#         "  --snp_tab {output.snp_tab} "
-#         "  --haplotype {output.haplotype} "
-#         "  {input.vcfs}"
+rule vcf2h5:
+    """Convert VCF data files to HDF5 format"""
+    input:
+        chrom = config['chrom_info'],
+        vcfs = rules.split_final_vcf.output
+    output:
+        snp_index = config['snp_h5_dir'] + "/snp_index.h5",
+        snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
+        haplotype = config['snp_h5_dir'] + "/haplotype.h5"
+    shell:
+        "mkdir -p {config[snp_h5_dir]}; "
+        "{config[wasp_dir]}/snp2h5/snp2h5 "
+        "  --chrom {input.chrom} "
+        "  --format vcf "
+        "  --snp_index {output.snp_index} "
+        "  --snp_tab {output.snp_tab} "
+        "  --haplotype {output.haplotype} "
+        "  {input.vcfs}"
 
 
 # rule find_intersecting_snps_paired_end:
