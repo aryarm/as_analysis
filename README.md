@@ -22,3 +22,6 @@ Defines a function for detecting allelic imbalance given count data. This code w
 
 ### find_imbalance.r
 An R script that sets up the necessary data for calling allele_imbalance.r and calls it. This script is called, in turn, by Snakefile-counts.
+
+### run-all.bash
+A bash script for executing the entire pipeline on an SGE cluster using snakemake.
