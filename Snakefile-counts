@@ -114,12 +114,14 @@ rule detect_imbalance:
         gene_info = config['gene_info']
         gq_file = rules.create_gq_files.output
     params:
-        output_dir = config['output_dir'] + "/"
+        output_dir = config['output_dir'] + "/final/"
     output:
+        config['output_dir'] + "/final/{sample}.dna.csv"
+        config['output_dir'] + "/final/{sample}.rna.csv"
         config['output_dir'] + "/final/{sample}.res.csv"
     shell:
         "mkdir -p {config[output_dir]}/final; "
-        "Rscript --no-save --no-restore --verbose find_imbalance.r "
+        "Rscript --no-save --no-restore find_imbalance.r "
         "{wildcards.sample} {input.dna_counts} "
         "{input.rna_counts} {input.gene_info} "
-        "{input.gq_file} {input.output_dir}"
+        "{input.gq_file} {params.output_dir}"

@@ -1,28 +1,20 @@
-.libPaths("~/anaconda2/lib/R/library/")
-library(plyr)
-library(rmutil)
-library(GenomicRanges)
-library(ape)
-library(rtracklayer)
-library(dplyr)
-# library(VariantAnnotation)
+suppressMessages(library(plyr))
+suppressMessages(library(rmutil))
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(ape))
+suppressMessages(library(rtracklayer))
+suppressMessages(library(dplyr))
 
-# custom function: allele.imbalance(rna, dna, rna.err, dna.err)
+# check existence of custom function: allele.imbalance(rna, dna, rna.err, dna.err)
 source("allele_imbalance.r")
 
-# sample_name <- args[1]
-sample_name <- "Jurkat"
-# dna_file <- args[2]
-dna_file <- "Jurkat.dna.as_counts.txt.gz"
-# rna_file <- args[3]
-rna_file <- "Jurkat.rna.as_counts.txt.gz"
-# gene information, provided by gencode
-# genes_file <- args[4]
-genes_file <- "gencode.v19.genes.chr.gtf"
-# gq_file <- args[5]
-gq_file <- "Jurkat.gq_subset.table"
-# output_dir <- args[6]
-output_dir <- "out/"
+args <- commandArgs(trailingOnly = TRUE)
+sample_name <- args[1]
+dna_file <- args[2]   # whole genome seq counts
+rna_file <- args[3]   # exome seq counts
+genes_file <- args[4] # gene information, provided by gencode
+gq_file <- args[5]    # a tab-delimited file specifying GQ scores for each variant
+output_dir <- args[6] # the output directory. must have a trailing slash
 
 import_counts <- function(file_path){
   # import raw counts from WASP
@@ -85,11 +77,17 @@ dna$genotype.error = gq$genotype.error[match(dna$rsID, gq$rsID)]
 # save space by removing gq, it isn't needed anymore
 rm(gq)
 
-# intersect dna and rna data frames with each other to get common rows, then save the results to csv files
+# intersect dna and rna data frames with each other to get common rows
 INT= intersect(dna$rsID, rna$rsID)
 dna= dna[dna$rsID %in% INT,]
-write.csv(dna, paste0(output_dir, sample_name, ".dna.csv"), row.names = F)
 rna= rna[rna$rsID %in% INT,]
+
+# save the results to csv files
+# but make sure the directory exists first!
+if (!dir.exists(output_dir)){
+  dir.create(output_dir, recursive = T)
+}
+write.csv(dna, paste0(output_dir, sample_name, ".dna.csv"), row.names = F)
 write.csv(rna, paste0(output_dir, sample_name, ".rna.csv"), row.names = F)
 
 # calculate error rates
@@ -100,7 +98,8 @@ err.rate= function(ref, alt, err){
 dna.err= err.rate(dna$ref.matches, dna$alt.matches, dna$errors)
 rna.err= err.rate(rna$ref.matches, rna$alt.matches, rna$errors)
 
-# dna and rna are data frames that need to have these columns:
+# NOW, we can finally call allele.imbalance()
+# note that dna and rna are data frames that need to have these columns:
 # 	ref.matches (ie ref_allele_count),
 # 	N (total allele count - ref+alt),
 # 	genotype.error (ie 10^(-GQ/10) - only appears in dna DF),
@@ -109,19 +108,20 @@ rna.err= err.rate(rna$ref.matches, rna$alt.matches, rna$errors)
 #   start (position of SNP)
 dna = dna[c('ref.matches', 'N', 'genotype.error', 'rsID', 'gene', 'start')]
 rna = rna[c('ref.matches', 'N', 'rsID', 'gene', 'start')]
-
+# call allele_imbalance and store the result in res
 res = as.data.frame(allele.imbalance(rna, dna, rna.err, dna.err))
+
 # rename col 'd' to 'a', since it represents estimates of allelic imbalance
 colnames(res)[which(names(res) == "d")] <- "a"
-# rename col 'gene' to 'gene_id'
-colnames(res)[which(names(res) == "gene")] <- "gene_id"
+# convert gene col from type factor to type char so dplyr is happy
+res$gene = as.character(res$gene)
 # add gene names to res. it only has gene_id right now
-res = left_join(res, unique(genes[, c("gene_name", "gene_id")]), by.x="gene", by.y="gene_id")
+res = left_join(res, unique(genes[, c("gene_name", "gene_id")]), by = c("gene"="gene_id"))
 write.csv(res, paste0(output_dir, sample_name, ".res.csv"), row.names = F)
 
-# some plots
-hist(res$a, breaks=15, xlab="Estimate of Allelic Imbalance", ylab="Occurence in Genes", main="")
-plot(pval~gene, res)
+# # some plots
+# hist(res$a, breaks=15, xlab="Estimate of Allelic Imbalance", ylab="Occurence in Genes", main="")
+# plot(pval~gene_name, res)
 
 # # plot
 # ref= as.numeric(as.character(rna$ref.matches))
