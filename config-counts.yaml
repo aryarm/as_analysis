@@ -1,0 +1,32 @@
+# This is the Snakemake configuration file that specifies paths and 
+# and options for the allele specific analysis pipeline. Anybody wishing to use
+# the provided snakemake pipeline should first fill out this file with paths to
+# their own data, as the Snakefile requires it.
+
+# TODO: consider using snakemake validation
+
+# The path to a text file specifying where to find BAM files for each sample.
+# Each row in the sample file should represent a different sample.
+# The sample file should have 6 columns (each separated by a single space):
+#       <1000genomes_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>
+"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.txt"
+
+# The path to an indexed reference genome for GATK
+"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
+
+# Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
+# For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
+"chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
+
+# The path to your WASP directory.
+# You can download WASP from https://github.com/bmvdgeijn/WASP
+"wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
+
+# directory in which to output all of the output files
+# defined relative to whatever directory you execute the snakemake command in
+"output_dir" : "out"
+
+"vcf_file" : "out/genotypes/ALL"
+
+# what are the maximum number of threads to use for each rule in the pipeline?
+"num_threads" : 4
