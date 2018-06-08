@@ -23,7 +23,7 @@ import_counts <- function(file_path){
   colnames(counts) = c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors")
   # add rsID string for later use by allele_imbalance.r
   counts$rsID = paste0(counts$chr, ":", counts$start, "_", counts$ref, "/", counts$alt)
-  # remove genotype column. all rows should be heterozygotes already
+  # remove genotype col, since all rows should be heterozygotes already
   counts$genotype = NULL
   counts
 }
@@ -58,7 +58,7 @@ proc_counts= function(counts, genes){
   counts= GRanges(counts)
   
   # step 2 add genes
-  hits= findOverlaps(counts, genes,type = "within")
+  hits= findOverlaps(counts, genes, type = "within")
   names(counts) <- NULL
   counts= as.data.frame(counts[queryHits(hits)])
   genes= as.data.frame(genes[subjectHits(hits)])
