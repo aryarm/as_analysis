@@ -38,7 +38,7 @@ rule align_dna:
         config['output_dir'] + "/dna_align/{sample}.sam"
     threads: config['num_threads']
     shell:
-        "bwa mem -M "
+        "{config[bwa]} mem -M "
         "-R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:ILLUMINA' "
         "-t {threads} {input.ref} "
         "{input.fastq1} {input.fastq2} > {output}"
@@ -53,7 +53,7 @@ rule sam_to_bam:
         config['output_dir'] + "/dna_align/{sample}.raw.bam"
     threads: config['num_threads']
     shell:
-        "samtools view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
+        "{config[samtools]} view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
 
 rule sort_bam_by_name:
     """Sort the bam output by name (not by coordinates yet)"""
@@ -63,7 +63,7 @@ rule sort_bam_by_name:
         config['output_dir'] + "/dna_align/{sample}.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools sort -n -@ {threads} {input} >{output}"
+        "{config[samtools]} sort -n -@ {threads} {input} >{output}"
 
 rule add_mate_info:
     """Use fixmate to fill in mate coordinates and mate related flags, since
@@ -75,7 +75,7 @@ rule add_mate_info:
         config['output_dir'] + "/dna_align/{sample}.mate.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools fixmate -m -@ {threads} {input} {output}"
+        "{config[samtools]} fixmate -m -@ {threads} {input} {output}"
 
 rule sort_bam_by_coord:
     """Sort the bam output by coordinates. Needed for markdup use later on."""
@@ -85,7 +85,7 @@ rule sort_bam_by_coord:
         config['output_dir'] + "/dna_align/{sample}.coordSort.mate.nameSort.bam"
     threads: config['num_threads']
     shell:
-        "samtools sort -@ {threads} -o {output} {input}"
+        "{config[samtools]} sort -@ {threads} -o {output} {input}"
 
 rule rm_dups:
     """Remove duplicates that may have occurred from PCR and index the
@@ -97,9 +97,9 @@ rule rm_dups:
         final_bam_index = config['output_dir'] + "/dna_align/{sample}.final.bam.bai"
     threads: config['num_threads']
     shell:
-        "mkdir -p {config[output_dir]}/dna_align; "
-        "samtools markdup -@ {threads} {input} {output.final_bam}; "
-        "samtools index -b -@ {threads} {output.final_bam}"
+        "mkdir -p {config[output_dir]}/dna_align && "
+        "{config[samtools]} markdup -@ {threads} {input} {output.final_bam} && "
+        "{config[samtools]} index -b -@ {threads} {output.final_bam}"
 
 rule base_recal:
     """Recalibrate the base quality scores. They might be biased"""
@@ -110,8 +110,8 @@ rule base_recal:
     output:
         config['output_dir'] + "/base_recal/{sample}.recal_data.table"
     shell:
-        "mkdir -p {config[output_dir]}/base_recal; "
-        "gatk BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
+        "mkdir -p {config[output_dir]}/base_recal && "
+        "{config[gatk]} BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
 
 rule apply_base_recal:
     """Apply base quality score recalibration"""
@@ -122,7 +122,7 @@ rule apply_base_recal:
     output:
         config['output_dir'] + "/base_recal/{sample}.recal.final.bam"
     shell:
-        "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
+        "{config[gatk]} ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
 
 rule haplotype:
     """Make a file with annotated variants"""
@@ -132,7 +132,7 @@ rule haplotype:
     output:
         config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
     shell:
-        "gatk HaplotypeCaller "
+        "{config[gatk]} HaplotypeCaller "
         "-R {input.ref} -I {input.bam} -O {output} -ERC GVCF "
         "-G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation"
 
@@ -145,7 +145,7 @@ rule combine:
         config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
     run:
         vcf_params = " ".join(['-V '+file for file in input.vcf])
-        shell(("gatk CombineGVCFs -R {input.ref} -O {output} "
+        shell(("{config[gatk]} CombineGVCFs -R {input.ref} -O {output} "
                "-G StandardAnnotation -G AS_StandardAnnotation "
                + vcf_params))
 
@@ -157,7 +157,7 @@ rule genotype:
     output:
         config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz"
     shell:
-        "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
+        "{config[gatk]} GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
         "-G StandardAnnotation -G AS_StandardAnnotation"
 
 rule variant_filter:
@@ -173,8 +173,8 @@ rule variant_filter:
         recal = config['output_dir'] + "/variant_filter/ALL.recal",
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
     shell:
-        "mkdir -p {config[output_dir]}/variant_filter; "
-        "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
+        "mkdir -p {config[output_dir]}/variant_filter && "
+        "{config[gatk]} VariantRecalibrator -R {input.ref} -V {input.vcf} "
         "--resource hapmap,known=false,training=true,truth=true,prior=15.0:{input.hapmap} "
         "--resource omni,known=false,training=true,truth=false,prior=12.0:{input.omni} "
         "--resource 1000G,known=false,training=true,truth=false,prior=10.0:{input.project1000G} "
@@ -192,7 +192,7 @@ rule apply_variant_filter:
     output:
         config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz"
     shell:
-        "gatk ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
+        "{config[gatk]} ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
         "--ts-filter-level 97.5 --recal-file {input.recal} "
         "--tranches-file {input.tranches} -O {output}"
 
@@ -204,5 +204,5 @@ rule filter_hets:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
     shell:
         "zcat {input} | "
-        "SnpSift filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
+        "{config[SnpSift]} filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
         "gzip -c >{output}"
