@@ -67,8 +67,7 @@ rule find_intersecting_snps_paired_end:
         fastq2 = config["output_dir"] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
         keep_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.keep.bam",
         remap_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.to.remap.bam"
-    conda:
-        "envs/pytables2.yaml"
+    conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/find_intersecting_snps && "
         "{config[py2]} {config[wasp_dir]}/mapping/find_intersecting_snps.py "
