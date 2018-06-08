@@ -1,5 +1,7 @@
 configfile: "config-variant_calling.yaml"
 
+import glob
+
 
 def read_samples():
     """Function to get names and fastq paths from a sample file specified
@@ -197,7 +199,7 @@ rule apply_variant_filter:
         "--tranches-file {input.tranches} -O {output}"
 
 rule filter_hets:
-    """Extract heterozygotes from the filtered VCF file"""
+    """Extract heterozygotes from the filtered VCF file and index the result"""
     input:
         vcf = rules.apply_variant_filter.output
     output:
@@ -205,4 +207,5 @@ rule filter_hets:
     shell:
         "zcat {input} | "
         "{config[SnpSift]} filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
-        "gzip -c >{output}"
+        "gzip -c >{output} && "
+        "bgzip -c {output} | {config[tabix]} -p vcf {output}"
