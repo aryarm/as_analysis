@@ -1,4 +1,4 @@
-configfile: "config.yaml"
+configfile: "config-counts.yaml"
 
 import glob
 
@@ -6,14 +6,14 @@ import glob
 def read_samples():
     """Function to get names and fastq paths from a sample file specified
     in the configuration. Input file is expected to have 4 columns:
-    <1000genomes_id> <unique_sample_id> <fastq1_path> <fastq2_path>. Modify
+    <1000genomes_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>. Modify
     this function as needed to provide a dictionary of sample_id keys and
-    (fastq1, fastq1) values"""
+    (dna_bam_path, rna_bam_path) values"""
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
         words = line.strip().split()
-        samp_dict[words[1]] = ((words[2], words[3]), (words[4], words[5]))
+        samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
 
@@ -23,34 +23,32 @@ def read_1kg_samples():
     for line in f:
         words = line.strip().split()
         samp_dict[words[1]] = words[0]
-
     return samp_dict
-
 
 SAMP_TO_1KG = read_1kg_samples()
 
 
-"""WASP needs some config values. Let's load them, so the user doesn't
-have to."""
-config['vcf_dir'] = config['output_dir'] + "/genotypes"
-config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
-
+# rule all:
+#     input:
+#         expand(config['output_dir'] + "/final/{sample}/result.csv",
+#                sample=read_samples().keys())
 
 rule all:
     input:
-        expand(config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz",
-               sample=read_samples().keys())
+        config['output_dir'] + "/final/samples.txt"
 
+# run the following to execute the pipeline:
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --use-conda >>${out_path}/out 2>&1 &
 
 rule split_vcf_by_sample:
     """Create VCF files for each sample from a single VCF file"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.apply_variant_filter.output
+        vcf = config['vcf_file']
     output:
         config['output_dir'] + "/extract_gq/{sample}.vcf.gz"
     shell:
-        "gatk SelectVariants -R {input.ref} -V {input.vcf} "
+        "{config[gatk]} SelectVariants -R {input.ref} -V {input.vcf} "
         "-sn {wildcards.sample} -O {output}"
 
 rule create_gq_files:
@@ -58,25 +56,35 @@ rule create_gq_files:
     columns: CHROM, POS, REF, ALT, and {sample}.GQ"""
     input:
         ref = config['ref_genome'],
-        vcf = expand(rules.split_vcf_by_sample.output, sample=read_samples().keys())
+        vcf = rules.split_vcf_by_sample.output
     output:
         config['output_dir'] + "/extract_gq/{sample}.gq_subset.table"
     shell:
-        "gatk VariantsToTable -R {input.ref} -V {input.vcf} "
+        "{config[gatk]} VariantsToTable -R {input.ref} -V {input.vcf} "
         "-F CHROM -F POS -F REF -F ALT -GF GQ "
         "-O {output}"
+
+rule split_vcf_by_chr:
+    """Split the provided VCF file by chromosome and gzip it for WASP"""
+    input:
+        vcf = config['vcf_file']
+    output:
+        dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
+    shell:
+        "{config[SnpSift]} split {input} && "
+        "gzip {config[output_dir]}/genotypes/*.vcf"
 
 rule vcf2h5:
     """Convert VCF data files to HDF5 format"""
     input:
         chrom = config['chrom_info'],
-        vcfs = rules.split_final_vcf.output
+        vcfs = rules.split_vcf_by_chr.output
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     shell:
-        "mkdir -p {config[snp_h5_dir]}; "
+        "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
         "  --format vcf "
@@ -88,40 +96,67 @@ rule vcf2h5:
 rule get_as_counts:
     """get allele-specific read counts for SNPs"""
     input:
-        bam = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam",
-        snp_index = config["snp_h5_dir"] + "/snp_index.h5",
-        snp_tab = config["snp_h5_dir"] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotype.h5",
+        dna_bam = lambda wildcards: read_samples()[wildcards.sample][0],
+        rna_bam = lambda wildcards: read_samples()[wildcards.sample][1],
+        snp_index = rules.vcf2h5.output.snp_index,
+        snp_tab = rules.vcf2h5.output.snp_tab,
+        haplotype = rules.vcf2h5.output.haplotype,
     params:
         samp1kg = lambda wildcards: SAMP_TO_1KG[wildcards.sample]
     output:
-        config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz"
+        dna = config['output_dir'] + "/as_counts/{sample}/dna.as_counts.txt.gz",
+        rna = config['output_dir'] + "/as_counts/{sample}/rna.as_counts.txt.gz"
+    conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/as_counts ; "
+        "mkdir -p {config[output_dir]}/as_counts/{wildcards.sample} && "
         "{config[py2]} {config[wasp_dir]}/mapping/get_as_counts.py "
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
         "  --haplotype {input.haplotype} "
-        "  --samples {config[sample_file]} "
+        "  --samples {config[sample_file_WASP]} "
         "  --genotype_sample {params.samp1kg} "
-        "  {input.bam} | gzip > {output}"
+        "  {input.dna_bam} | gzip > {output.dna} && "
+        "{config[py2]} {config[wasp_dir]}/mapping/get_as_counts.py "
+        "  --snp_tab {input.snp_tab} "
+        "  --snp_index {input.snp_index} "
+        "  --haplotype {input.haplotype} "
+        "  --samples {config[sample_file_WASP]} "
+        "  --genotype_sample {params.samp1kg} "
+        "  {input.rna_bam} | gzip > {output.rna}"
+
+rule create_sample_file:
+    """create a sample file for rules.detect_imbalance, where for each sample,
+    there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
+    input:
+        dna_counts = expand(rules.get_as_counts.output.dna,
+                            sample=read_samples().keys()),
+        rna_counts = expand(rules.get_as_counts.output.rna,
+                            sample=read_samples().keys()),
+        gq_file = expand(rules.create_gq_files.output,
+                         sample=read_samples().keys())
+    params:
+        samples = list(read_samples().keys())
+    output:
+        config['output_dir'] + "/final/samples.txt"
+    run:
+        shell("mkdir -p " + config['output_dir'] + "/final")
+        sample_file = open(output[0], 'w+')
+        for i in range(len(params.samples)):
+            sample_file.write(" ".join([params.samples[i], input.dna_counts[i], input.rna_counts[i], input.gq_file[i]]) + "\n")
+        sample_file.close()
 
 rule detect_imbalance:
     """quantify allelic imbalance in genes for each sample"""
     input:
-        dna_counts = config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz"
-        rna_counts = config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz"
+        sample_file = rules.create_sample_file.output,
         gene_info = config['gene_info']
-        gq_file = rules.create_gq_files.output
     params:
-        output_dir = config['output_dir'] + "/final/"
+        output_dir = config['output_dir'] + "/final/{sample}/"
     output:
-        config['output_dir'] + "/final/{sample}.dna.csv"
-        config['output_dir'] + "/final/{sample}.rna.csv"
-        config['output_dir'] + "/final/{sample}.res.csv"
+        config['output_dir'] + "/final/{sample}/dna.csv",
+        config['output_dir'] + "/final/{sample}/rna.csv",
+        config['output_dir'] + "/final/{sample}/result.csv"
     shell:
-        "mkdir -p {config[output_dir]}/final; "
-        "Rscript --no-save --no-restore find_imbalance.r "
-        "{wildcards.sample} {input.dna_counts} "
-        "{input.rna_counts} {input.gene_info} "
-        "{input.gq_file} {params.output_dir}"
+        "exit 1 && "
+        "{config[Rscript]} --no-save --no-restore find_imbalance.r "
+        "{input.sample_file} {input.gene_info} {params.output_dir}"
