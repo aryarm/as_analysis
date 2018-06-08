@@ -18,7 +18,7 @@ Required input for each snakemake pipeline
 Defines a function for detecting allelic imbalance given count data. This code was adapted from [@Arkosen](https://github.com/Arkosen/Detecting-structural-variants-/blob/master/allele_imbalance.r)
 
 ### find_imbalance.r
-An R script that sets up the necessary data for calling allele_imbalance.r and calls it. This script is called, in turn, by Snakefile-counts.
+An R script that sets up the necessary data for calling `allele_imbalance.r` and then calls it. This script is called, in turn, by Snakefile-counts.
 
 ### run-all.bash
 A bash script for executing the entire pipeline on an SGE cluster using snakemake.
