@@ -1,4 +1,4 @@
-configfile: "config.yaml"
+configfile: "config-WASP.yaml"
 
 import glob
 
@@ -13,70 +13,40 @@ def read_samples():
     samp_dict = {}
     for line in f:
         words = line.strip().split()
-        samp_dict[words[1]] = ((words[2], words[3]), (words[4], words[5]))
+        samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
-
-
-def read_1kg_samples():
-    f = open(config['sample_file'], "r")
-    samp_dict = {}
-    for line in f:
-        words = line.strip().split()
-        samp_dict[words[1]] = words[0]
-
-    return samp_dict
-
-
-SAMP_TO_1KG = read_1kg_samples()
-
-
-def get_chromosomes():
-    """Gets list of chromosomes from VCF files"""
-    filenames = os.listdir(config['vcf_dir'])
-
-    chr_names = set([])
-    for filename in filenames:
-        if filename.endswith(".vcf.gz"):
-            m = re.match(".*(chr[0-9A-Z]+).*", filename)
-            if m:
-                chr_names.add(m.groups()[0])
-
-    return chr_names
-
-
-"""WASP needs some config values. Let's load them, so the user doesn't
-have to."""
-config['vcf_dir'] = config['output_dir'] + "/genotypes"
-config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 
 
 rule all:
     input:
-        expand(config['output_dir'] + "/as_counts/{sample}.as_counts.txt.gz",
+        expand(config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam",
                sample=read_samples().keys())
 
+# run the following to execute the pipeline:
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 --use-conda >>${out_path}/out 2>&1 &
 
-rule split_final_vcf:
+rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
-        vcf = rules.filter_hets.output
+        vcf = config['vcf_file']
     output:
         dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
     shell:
-        "SnpSift split {input}; "
+        "mkdir -p {config[output_dir]}/genotypes && "
+        "SnpSift split {input} && "
         "gzip {config[output_dir]}/genotypes/*.vcf"
 
 rule vcf2h5:
     """Convert VCF data files to HDF5 format"""
     input:
         chrom = config['chrom_info'],
-        vcfs = rules.split_final_vcf.output
+        vcfs = rules.split_vcf_by_chr.output
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     shell:
-        "mkdir -p {config[snp_h5_dir]}; "
+        "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
         "  --format vcf "
@@ -84,7 +54,6 @@ rule vcf2h5:
         "  --snp_tab {output.snp_tab} "
         "  --haplotype {output.haplotype} "
         "  {input.vcfs}"
-
 
 rule find_intersecting_snps_paired_end:
     """find intersecting SNPs using WASP script"""
@@ -98,8 +67,10 @@ rule find_intersecting_snps_paired_end:
         fastq2 = config["output_dir"] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
         keep_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.keep.bam",
         remap_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.to.remap.bam"
+    conda:
+        "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/find_intersecting_snps ; "
+        "mkdir -p {config[output_dir]}/find_intersecting_snps && "
         "{config[py2]} {config[wasp_dir]}/mapping/find_intersecting_snps.py "
         "    --is_paired_end "
         "    --is_sorted "
@@ -110,60 +81,65 @@ rule find_intersecting_snps_paired_end:
         "    --samples {config[sample_file]} "
         "    {input.bam}"
 
-
-# TODO: change to STAR
-rule map_bowtie2_paired_end1:
-    """map reads using bowtie2"""
+rule map_STAR_paired_end1:
+    """map reads using STAR"""
     input:
-        fastq1 = lambda wildcards: read_samples()[wildcards.sample][1][0],
-        fastq2 = lambda wildcards: read_samples()[wildcards.sample][1][1]
+        fastq1 = lambda wildcards: read_samples()[wildcards.sample][0],
+        fastq2 = lambda wildcards: read_samples()[wildcards.sample][1],
+        index = config["ref_genome_star"]
     output:
-        config["output_dir"] + "/map1/{sample}.bam"
+        config["output_dir"] + "/map1/{sample}/Aligned.sortedByCoord.out.bam"
+    params:
+        prefix = config["output_dir"] + "/map1/{sample}/"
     shell:
-        "mkdir -p " + config["output_dir"] + "/map1 ; "
-        "{config[bowtie2]} -x {config[bowtie2_index]} -1 {input.fastq1} -2 {input.fastq2} -p 12"
-        "| {config[samtools]} view -b -q 10 - > {output} "
-
+        "mkdir -p {params.prefix} && "
+        "{config[STAR]} --runThreadN {threads} "
+            "--genomeDir {input.index} "
+            "--readFilesIn {input.fastq1} {input.fastq2} "
+            "--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate "
+            "--outFileNamePrefix {params.prefix}"
 
 rule sort_and_index_bam1:
     """sort and index bam generated by first mapping step"""
     input:
-        config["output_dir"] + "/map1/{sample}.bam"
+        config["output_dir"] + "/map1/{sample}/Aligned.sortedByCoord.out.bam"
     output:
         config["output_dir"] + "/map1_sort/{sample}.bam",
         config["output_dir"] + "/map1_sort/{sample}.bam.bai"
     shell:
-        "mkdir -p {config[output_dir]}/map1_sort ; "
-        "{config[samtools]} sort -o {output[0]} {input}; "
+        "mkdir -p {config[output_dir]}/map1_sort && "
+        "{config[samtools]} sort -o {output[0]} {input} && "
         "{config[samtools]} index {output[0]}"
 
-
-# TODO: change to STAR
-rule map_bowtie2_paired_end2:
-    """map reads a second time using bowtie2"""
+rule map_STAR_paired_end2:
+    """map reads a second time using STAR"""
     input:
         fastq1 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq1.gz",
-        fastq2 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq2.gz"
+        fastq2 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
+        index = config["ref_genome_star"]
     output:
-        config["output_dir"] + "/map2/{sample}.bam"
+        config["output_dir"] + "/map2/{sample}/Aligned.sortedByCoord.out.bam"
+    params:
+        prefix = config["output_dir"] + "/map2/{sample}/"
     shell:
-        "mkdir -p " + config["output_dir"] + "/map2 ; "
-        "{config[bowtie2]} -x {config[bowtie2_index]} -1 {input.fastq1} -2 {input.fastq2} -p 12"
-        "| {config[samtools]} view -b -q 10 - > {output}"
-
+        "mkdir -p {params.prefix} && "
+        "{config[STAR]} --runThreadN {threads} "
+            "--genomeDir {input.index} "
+            "--readFilesIn {input.fastq1} {input.fastq2} "
+            "--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate "
+            "--outFileNamePrefix {params.prefix}"
 
 rule sort_and_index_bam2:
     """sort and index bam generated by second mapping step"""
     input:
-        config["output_dir"] + "/map2/{sample}.bam"
+        config["output_dir"] + "/map2/{sample}/Aligned.sortedByCoord.out.bam"
     output:
         config["output_dir"] + "/map2_sort/{sample}.bam",
         config["output_dir"] + "/map2_sort/{sample}.bam.bai"
     shell:
-        "mkdir -p {config[output_dir]}/map2_sort ; "
-        "{config[samtools]} sort -o {output[0]} {input} ; "
+        "mkdir -p {config[output_dir]}/map2_sort && "
+        "{config[samtools]} sort -o {output[0]} {input} && "
         "{config[samtools]} index {output[0]}"
-
 
 rule filter_remapped_reads:
     """filter reads from second mapping step"""
@@ -173,10 +149,9 @@ rule filter_remapped_reads:
     output:
         keep_bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam"
     shell:
-        "mkdir -p {config[output_dir]}/filter_remapped_reads ; "
+        "mkdir -p {config[output_dir]}/filter_remapped_reads && "
         "{config[py2]} {config[wasp_dir]}/mapping/filter_remapped_reads.py "
         "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
-
 
 rule merge_bams:
     """merge 'keep' BAM files from mapping steps 1 and 2, then sort and index"""
@@ -187,11 +162,10 @@ rule merge_bams:
         merge = config['output_dir'] + "/merge/{sample}.keep.merge.bam",
         sort = config['output_dir'] + "/merge/{sample}.keep.merge.sort.bam"
     shell:
-        "mkdir -p {config[output_dir]}/merge ; "
-        "{config[samtools]} merge {output.merge} {input.keep1} {input.keep2}; "
-        "{config[samtools]} sort -o {output.sort} {output.merge}; "
+        "mkdir -p {config[output_dir]}/merge && "
+        "{config[samtools]} merge {output.merge} {input.keep1} {input.keep2} && "
+        "{config[samtools]} sort -o {output.sort} {output.merge} && "
         "{config[samtools]} index {output.sort}"
-
 
 rule rmdup_pe:
     """remove duplicate read pairs"""
@@ -201,7 +175,7 @@ rule rmdup_pe:
         rmdup = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.bam",
         sort = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam"
     shell:
-        "mkdir -p {config[output_dir]}/rmdup ; "
-        "{config[py2]} {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} ;"
-        "{config[samtools]} sort -o {output.sort} {output.rmdup}; "
+        "mkdir -p {config[output_dir]}/rmdup && "
+        "{config[py2]} {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
+        "{config[samtools]} sort -o {output.sort} {output.rmdup} && "
         "{config[samtools]} index {output.sort}"
