@@ -28,14 +28,10 @@ def read_1kg_samples():
 SAMP_TO_1KG = read_1kg_samples()
 
 
-# rule all:
-#     input:
-#         expand(config['output_dir'] + "/final/{sample}/result.csv",
-#                sample=read_samples().keys())
-
 rule all:
     input:
-        config['output_dir'] + "/final/samples.txt"
+        expand(config['output_dir'] + "/final/{sample}/result.csv",
+               sample=read_samples().keys())
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --use-conda >>${out_path}/out 2>&1 &
@@ -151,12 +147,14 @@ rule detect_imbalance:
         sample_file = rules.create_sample_file.output,
         gene_info = config['gene_info']
     params:
-        output_dir = config['output_dir'] + "/final/{sample}/"
+        output_dir = config['output_dir'] + "/final/"
     output:
-        config['output_dir'] + "/final/{sample}/dna.csv",
-        config['output_dir'] + "/final/{sample}/rna.csv",
-        config['output_dir'] + "/final/{sample}/result.csv"
+        expand(config['output_dir'] + "/final/{sample}/dna.csv",
+               sample=read_samples().keys()),
+        expand(config['output_dir'] + "/final/{sample}/rna.csv",
+               sample=read_samples().keys()),
+        expand(config['output_dir'] + "/final/{sample}/result.csv",
+               sample=read_samples().keys())
     shell:
-        "exit 1 && "
         "{config[Rscript]} --no-save --no-restore find_imbalance.r "
         "{input.sample_file} {input.gene_info} {params.output_dir}"
