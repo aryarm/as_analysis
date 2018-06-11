@@ -100,16 +100,14 @@ rule vcf2h5:
 rule get_as_counts:
     """get allele-specific read counts for SNPs"""
     input:
-        dna_bam = lambda wildcards: SAMP[wildcards.sample][0],
-        rna_bam = lambda wildcards: SAMP[wildcards.sample][1],
+        bam = lambda wildcards: SAMP[wildcards.sample][wildcards.type == "rna"],
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
     params:
         samp1kg = lambda wildcards: SAMP_TO_1KG[wildcards.sample]
     output:
-        dna = config['output_dir'] + "/as_counts/{sample}/dna.as_counts.txt.gz",
-        rna = config['output_dir'] + "/as_counts/{sample}/rna.as_counts.txt.gz"
+        config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/as_counts/{wildcards.sample} && "
@@ -119,23 +117,16 @@ rule get_as_counts:
         "  --haplotype {input.haplotype} "
         "  --samples {config[sample_file]} "
         "  --genotype_sample {params.samp1kg} "
-        "  {input.dna_bam} | gzip > {output.dna} && "
-        "{config[py2]} {config[wasp_dir]}/mapping/get_as_counts.py "
-        "  --snp_tab {input.snp_tab} "
-        "  --snp_index {input.snp_index} "
-        "  --haplotype {input.haplotype} "
-        "  --samples {config[sample_file]} "
-        "  --genotype_sample {params.samp1kg} "
-        "  {input.rna_bam} | gzip > {output.rna}"
+        "  {input.bam} | gzip > {output}"
 
 rule create_sample_file:
     """create a sample file for rules.detect_imbalance, where for each sample,
     there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
     input:
-        dna_counts = expand(rules.get_as_counts.output.dna,
-                            sample=config['SAMP_NAMES']),
-        rna_counts = expand(rules.get_as_counts.output.rna,
-                            sample=config['SAMP_NAMES']),
+        dna_counts = expand(rules.get_as_counts.output,
+                            sample=config['SAMP_NAMES'], type="dna"),
+        rna_counts = expand(rules.get_as_counts.output,
+                            sample=config['SAMP_NAMES'], type="rna"),
         gq_file = expand(rules.create_gq_files.output,
                          sample=config['SAMP_NAMES'])
     params:
