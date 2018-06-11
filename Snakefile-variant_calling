@@ -136,7 +136,7 @@ rule haplotype:
     """Make a file with annotated variants"""
     input:
         ref = config['ref_genome'],
-        bam = rules.apply_base_recal.output if config['score_recal'] else rules.rm_dups.output.final_bam
+        bam = rules.apply_base_recal.output if config['score_recal'] else rules.apply_base_recal.input.bam
     output:
         config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
     shell:
@@ -201,13 +201,30 @@ rule apply_variant_filter:
         config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz"
     shell:
         "{config[gatk]} ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
-        "--ts-filter-level 97.5 --recal-file {input.recal} "
-        "--tranches-file {input.tranches} -O {output}"
+        "--ts-filter-level {config[target_sensitivity]} "
+        "--recal-file {input.recal} --tranches-file {input.tranches} "
+        "-O {output}"
+
+rule variant_hard_filter:
+    """Create a file with only variants that pass a hard filter.
+    This is an alternative to rules.variant_filter"""
+    input:
+        ref = config['ref_genome'],
+        vcf = rules.genotype.output,
+    params:
+        filter_expr = config['filter_expr']
+        filter_name = "snakemake_hard_filter"
+    output:
+        rules.apply_variant_filter.output
+    shell:
+        "{config[gatk]} VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
+        "-filter {params.filter_expr:q} --filter-name {params.filter_name:q}"
+
 
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
     input:
-        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.genotype.output
+        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
     output:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
     shell:
