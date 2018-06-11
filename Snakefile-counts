@@ -105,6 +105,7 @@ rule get_as_counts:
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
     params:
+        sample_names = ",".join(config['SAMP_NAMES'])
         samp1kg = lambda wildcards: SAMP_TO_1KG[wildcards.sample]
     output:
         config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.txt.gz"
@@ -115,7 +116,7 @@ rule get_as_counts:
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
         "  --haplotype {input.haplotype} "
-        "  --samples {config[sample_file]} "
+        "  --samples {params.sample_names} "
         "  --genotype_sample {params.samp1kg} "
         "  {input.bam} | gzip > {output}"
 

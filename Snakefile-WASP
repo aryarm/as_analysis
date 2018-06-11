@@ -70,6 +70,8 @@ rule find_intersecting_snps_paired_end:
         snp_index = config["snp_h5_dir"] + "/snp_index.h5",
         snp_tab = config["snp_h5_dir"] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
+    params:
+        sample_names = ",".join(config['SAMP_NAMES'])
     output:
         fastq1 = config["output_dir"] + "/find_intersecting_snps/{sample}.remap.fq1.gz",
         fastq2 = config["output_dir"] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
@@ -85,7 +87,7 @@ rule find_intersecting_snps_paired_end:
         "    --snp_tab {input.snp_tab} "
         "    --snp_index {input.snp_index} "
         "    --haplotype {input.haplotype} "
-        "    --samples {config[sample_file]} "
+        "    --samples {params.sample_names} "
         "    {input.bam}"
 
 rule map_STAR_paired_end1:
