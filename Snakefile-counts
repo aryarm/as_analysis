@@ -16,6 +16,12 @@ def read_samples():
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
+SAMP = read_samples()
+# change SAMP_NAMES here to contain whichever sample names you'd like
+# to generate files for
+if 'SAMP_NAMES' not in config:
+    config['SAMP_NAMES'] = list(SAMP.keys())
+
 
 def read_1kg_samples():
     f = open(config['sample_file'], "r")
@@ -30,8 +36,10 @@ SAMP_TO_1KG = read_1kg_samples()
 
 rule all:
     input:
+        # if you'd like to generate files for only a subset of the samples,
+        # you should specify which samples in the SAMP_NAMES variable above
         expand(config['output_dir'] + "/final/{sample}/result.csv",
-               sample=read_samples().keys())
+               sample=config['SAMP_NAMES'])
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --use-conda >>${out_path}/out 2>&1 &
@@ -92,8 +100,8 @@ rule vcf2h5:
 rule get_as_counts:
     """get allele-specific read counts for SNPs"""
     input:
-        dna_bam = lambda wildcards: read_samples()[wildcards.sample][0],
-        rna_bam = lambda wildcards: read_samples()[wildcards.sample][1],
+        dna_bam = lambda wildcards: SAMP[wildcards.sample][0],
+        rna_bam = lambda wildcards: SAMP[wildcards.sample][1],
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
@@ -109,14 +117,14 @@ rule get_as_counts:
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
         "  --haplotype {input.haplotype} "
-        "  --samples {config[sample_file_WASP]} "
+        "  --samples {config[sample_file]} "
         "  --genotype_sample {params.samp1kg} "
         "  {input.dna_bam} | gzip > {output.dna} && "
         "{config[py2]} {config[wasp_dir]}/mapping/get_as_counts.py "
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
         "  --haplotype {input.haplotype} "
-        "  --samples {config[sample_file_WASP]} "
+        "  --samples {config[sample_file]} "
         "  --genotype_sample {params.samp1kg} "
         "  {input.rna_bam} | gzip > {output.rna}"
 
@@ -125,13 +133,13 @@ rule create_sample_file:
     there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
     input:
         dna_counts = expand(rules.get_as_counts.output.dna,
-                            sample=read_samples().keys()),
+                            sample=config['SAMP_NAMES']),
         rna_counts = expand(rules.get_as_counts.output.rna,
-                            sample=read_samples().keys()),
+                            sample=config['SAMP_NAMES']),
         gq_file = expand(rules.create_gq_files.output,
-                         sample=read_samples().keys())
+                         sample=config['SAMP_NAMES'])
     params:
-        samples = list(read_samples().keys())
+        samples = list(SAMP_NAMES)
     output:
         config['output_dir'] + "/final/samples.txt"
     run:
@@ -150,11 +158,11 @@ rule detect_imbalance:
         output_dir = config['output_dir'] + "/final/"
     output:
         expand(config['output_dir'] + "/final/{sample}/dna.csv",
-               sample=read_samples().keys()),
+               sample=config['SAMP_NAMES']),
         expand(config['output_dir'] + "/final/{sample}/rna.csv",
-               sample=read_samples().keys()),
+               sample=config['SAMP_NAMES']),
         expand(config['output_dir'] + "/final/{sample}/result.csv",
-               sample=read_samples().keys())
+               sample=config['SAMP_NAMES'])
     shell:
         "{config[Rscript]} --no-save --no-restore find_imbalance.r "
         "{input.sample_file} {input.gene_info} {params.output_dir}"

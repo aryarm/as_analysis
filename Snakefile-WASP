@@ -16,11 +16,19 @@ def read_samples():
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
+SAMP = read_samples()
+# change SAMP_NAMES here to contain whichever sample names you'd like
+# to generate files for
+if 'SAMP_NAMES' not in config:
+    config['SAMP_NAMES'] = list(SAMP.keys())
+
 
 rule all:
     input:
+        # if you'd like to generate files for only a subset of the samples,
+        # you should specify which samples in the SAMP_NAMES variable above
         expand(config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam",
-               sample=read_samples().keys())
+               sample=SAMP_NAMES)
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 --use-conda >>${out_path}/out 2>&1 &
@@ -83,8 +91,8 @@ rule find_intersecting_snps_paired_end:
 rule map_STAR_paired_end1:
     """map reads using STAR"""
     input:
-        fastq1 = lambda wildcards: read_samples()[wildcards.sample][0],
-        fastq2 = lambda wildcards: read_samples()[wildcards.sample][1],
+        fastq1 = lambda wildcards: SAMP[wildcards.sample][0],
+        fastq2 = lambda wildcards: SAMP[wildcards.sample][1],
         index = config["ref_genome_star"]
     output:
         config["output_dir"] + "/map1/{sample}/Aligned.sortedByCoord.out.bam"

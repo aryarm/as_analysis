@@ -16,10 +16,16 @@ def read_samples():
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
+SAMP = read_samples()
+# change SAMP_NAMES here to contain whichever sample names you'd like
+# to generate files for
+if 'SAMP_NAMES' not in config:
+    config['SAMP_NAMES'] = list(SAMP.keys())
 
-"""WASP needs some config values. Let's load them, so the user doesn't
-have to."""
-config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
+
+# """WASP needs some config values. Let's load them, so the user doesn't
+# have to."""
+# config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 
 
 rule all:
@@ -34,8 +40,8 @@ rule align_dna:
     info for haplotype caller."""
     input:
         ref = config['ref_genome_bwa'],
-        fastq1 = lambda wildcards: read_samples()[wildcards.sample][0],
-        fastq2 = lambda wildcards: read_samples()[wildcards.sample][1]
+        fastq1 = lambda wildcards: SAMP[wildcards.sample][0],
+        fastq2 = lambda wildcards: SAMP[wildcards.sample][1]
     output:
         config['output_dir'] + "/dna_align/{sample}.sam"
     threads: config['num_threads']
@@ -130,7 +136,7 @@ rule haplotype:
     """Make a file with annotated variants"""
     input:
         ref = config['ref_genome'],
-        bam = rules.apply_base_recal.output
+        bam = rules.apply_base_recal.output if config['score_recal'] else rules.rm_dups.output.final_bam
     output:
         config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
     shell:
@@ -142,7 +148,7 @@ rule combine:
     """Combine the g.vcf files"""
     input:
         ref = config['ref_genome'],
-        vcf = expand(rules.haplotype.output, sample=read_samples().keys())
+        vcf = expand(rules.haplotype.output, sample=config['SAMP_NAMES'])
     output:
         config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
     run:
@@ -201,7 +207,7 @@ rule apply_variant_filter:
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
     input:
-        vcf = rules.apply_variant_filter.output
+        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.genotype.output
     output:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
     shell:
