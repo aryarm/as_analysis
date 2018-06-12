@@ -1,0 +1,11 @@
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - gatk4=4.0.4
+  - snpsift
+  - star
+  - ncurses
+  - samtools
+  - bwa
+  - tabix

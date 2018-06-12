@@ -28,10 +28,10 @@ rule all:
         # if you'd like to generate files for only a subset of the samples,
         # you should specify which samples in the SAMP_NAMES variable above
         expand(config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam",
-               sample=SAMP_NAMES)
+               sample=config['SAMP_NAMES'])
 
 # run the following to execute the pipeline:
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 --use-conda >>${out_path}/out 2>&1 &
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 15 --use-conda >>${out_path}/out 2>&1 &
 
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
@@ -39,6 +39,7 @@ rule split_vcf_by_chr:
         vcf = config['vcf_file']
     output:
         dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/genotypes && "
         "SnpSift split {input} && "
@@ -53,6 +54,7 @@ rule vcf2h5:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
+    conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
@@ -80,7 +82,7 @@ rule find_intersecting_snps_paired_end:
     conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/find_intersecting_snps && "
-        "{config[py2]} {config[wasp_dir]}/mapping/find_intersecting_snps.py "
+        "python {config[wasp_dir]}/mapping/find_intersecting_snps.py "
         "    --is_paired_end "
         "    --is_sorted "
         "    --output_dir {config[output_dir]}/find_intersecting_snps "
@@ -100,9 +102,10 @@ rule map_STAR_paired_end1:
         config["output_dir"] + "/map1/{sample}/Aligned.sortedByCoord.out.bam"
     params:
         prefix = config["output_dir"] + "/map1/{sample}/"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {params.prefix} && "
-        "{config[STAR]} --runThreadN {threads} "
+        "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate "
@@ -115,10 +118,11 @@ rule sort_and_index_bam1:
     output:
         config["output_dir"] + "/map1_sort/{sample}.bam",
         config["output_dir"] + "/map1_sort/{sample}.bam.bai"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/map1_sort && "
-        "{config[samtools]} sort -o {output[0]} {input} && "
-        "{config[samtools]} index {output[0]}"
+        "samtools sort -o {output[0]} {input} && "
+        "samtools index {output[0]}"
 
 rule map_STAR_paired_end2:
     """map reads a second time using STAR"""
@@ -130,9 +134,10 @@ rule map_STAR_paired_end2:
         config["output_dir"] + "/map2/{sample}/Aligned.sortedByCoord.out.bam"
     params:
         prefix = config["output_dir"] + "/map2/{sample}/"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {params.prefix} && "
-        "{config[STAR]} --runThreadN {threads} "
+        "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat --outSAMtype BAM SortedByCoordinate "
@@ -145,10 +150,11 @@ rule sort_and_index_bam2:
     output:
         config["output_dir"] + "/map2_sort/{sample}.bam",
         config["output_dir"] + "/map2_sort/{sample}.bam.bai"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/map2_sort && "
-        "{config[samtools]} sort -o {output[0]} {input} && "
-        "{config[samtools]} index {output[0]}"
+        "samtools sort -o {output[0]} {input} && "
+        "samtools index {output[0]}"
 
 rule filter_remapped_reads:
     """filter reads from second mapping step"""
@@ -157,9 +163,10 @@ rule filter_remapped_reads:
         remap_bam = config['output_dir'] + "/map2_sort/{sample}.bam",
     output:
         keep_bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam"
+    conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/filter_remapped_reads && "
-        "{config[py2]} {config[wasp_dir]}/mapping/filter_remapped_reads.py "
+        "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
         "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
 
 rule merge_bams:
@@ -170,11 +177,12 @@ rule merge_bams:
     output:
         merge = config['output_dir'] + "/merge/{sample}.keep.merge.bam",
         sort = config['output_dir'] + "/merge/{sample}.keep.merge.sort.bam"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/merge && "
-        "{config[samtools]} merge {output.merge} {input.keep1} {input.keep2} && "
-        "{config[samtools]} sort -o {output.sort} {output.merge} && "
-        "{config[samtools]} index {output.sort}"
+        "samtools merge {output.merge} {input.keep1} {input.keep2} && "
+        "samtools sort -o {output.sort} {output.merge} && "
+        "samtools index {output.sort}"
 
 rule rmdup_pe:
     """remove duplicate read pairs"""
@@ -183,8 +191,9 @@ rule rmdup_pe:
     output:
         rmdup = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.bam",
         sort = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam"
+    conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/rmdup && "
-        "{config[py2]} {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
-        "{config[samtools]} sort -o {output.sort} {output.rmdup} && "
-        "{config[samtools]} index {output.sort}"
+        "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
+        "samtools sort -o {output.sort} {output.rmdup} && "
+        "samtools index {output.sort}"

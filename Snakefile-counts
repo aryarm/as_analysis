@@ -17,8 +17,8 @@ def read_samples():
     return samp_dict
 
 SAMP = read_samples()
-# change SAMP_NAMES here to contain whichever sample names you'd like
-# to generate files for
+# alter SAMP_NAMES here to contain whichever sample names you'd like
+# to run the pipeline on
 if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(SAMP.keys())
 
@@ -36,7 +36,7 @@ SAMP_TO_1KG = read_1kg_samples()
 
 rule all:
     input:
-        # if you'd like to generate files for only a subset of the samples,
+        # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify which samples in the SAMP_NAMES variable above
         expand(config['output_dir'] + "/final/{sample}/result.csv",
                sample=config['SAMP_NAMES'])
@@ -51,8 +51,9 @@ rule split_vcf_by_sample:
         vcf = config['vcf_file']
     output:
         config['output_dir'] + "/extract_gq/{sample}.vcf.gz"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} SelectVariants -R {input.ref} -V {input.vcf} "
+        "gatk SelectVariants -R {input.ref} -V {input.vcf} "
         "-sn {wildcards.sample} -O {output}"
 
 rule create_gq_files:
@@ -63,8 +64,9 @@ rule create_gq_files:
         vcf = rules.split_vcf_by_sample.output
     output:
         config['output_dir'] + "/extract_gq/{sample}.gq_subset.table"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} VariantsToTable -R {input.ref} -V {input.vcf} "
+        "gatk VariantsToTable -R {input.ref} -V {input.vcf} "
         "-F CHROM -F POS -F REF -F ALT -GF GQ "
         "-O {output}"
 
@@ -74,8 +76,9 @@ rule split_vcf_by_chr:
         vcf = config['vcf_file']
     output:
         dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
+    conda: "envs/default.yaml"
     shell:
-        "{config[SnpSift]} split {input} && "
+        "SnpSift split {input} && "
         "gzip {config[output_dir]}/genotypes/*.vcf"
 
 rule vcf2h5:
@@ -87,6 +90,7 @@ rule vcf2h5:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
+    conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
@@ -105,14 +109,14 @@ rule get_as_counts:
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
     params:
-        sample_names = ",".join(config['SAMP_NAMES'])
+        sample_names = ",".join(config['SAMP_NAMES']),
         samp1kg = lambda wildcards: SAMP_TO_1KG[wildcards.sample]
     output:
         config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/as_counts/{wildcards.sample} && "
-        "{config[py2]} {config[wasp_dir]}/mapping/get_as_counts.py "
+        "python {config[wasp_dir]}/mapping/get_as_counts.py "
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
         "  --haplotype {input.haplotype} "
@@ -125,13 +129,13 @@ rule create_sample_file:
     there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
     input:
         dna_counts = expand(rules.get_as_counts.output,
-                            sample=config['SAMP_NAMES'], type="dna"),
+                            sample=config['SAMP_NAMES'], type=["dna"]),
         rna_counts = expand(rules.get_as_counts.output,
-                            sample=config['SAMP_NAMES'], type="rna"),
+                            sample=config['SAMP_NAMES'], type=["rna"]),
         gq_file = expand(rules.create_gq_files.output,
                          sample=config['SAMP_NAMES'])
     params:
-        samples = list(SAMP_NAMES)
+        samples = config['SAMP_NAMES']
     output:
         config['output_dir'] + "/final/samples.txt"
     run:

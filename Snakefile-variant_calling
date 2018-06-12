@@ -33,7 +33,7 @@ rule all:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
 
 # run the following to execute the pipeline:
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-variant_calling --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 >>${out_path}/out 2>&1 &
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-variant_calling --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 --use-conda >>${out_path}/out 2>&1 &
 
 rule align_dna:
     """Align DNA reads using BWA-MEM. Note that we use -R to specify read group
@@ -45,8 +45,9 @@ rule align_dna:
     output:
         config['output_dir'] + "/dna_align/{sample}.sam"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
-        "{config[bwa]} mem -M "
+        "bwa mem -M "
         "-R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:ILLUMINA' "
         "-t {threads} {input.ref} "
         "{input.fastq1} {input.fastq2} > {output}"
@@ -60,8 +61,9 @@ rule sam_to_bam:
     output:
         config['output_dir'] + "/dna_align/{sample}.raw.bam"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
-        "{config[samtools]} view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
+        "samtools view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
 
 rule sort_bam_by_name:
     """Sort the bam output by name (not by coordinates yet)"""
@@ -70,8 +72,9 @@ rule sort_bam_by_name:
     output:
         config['output_dir'] + "/dna_align/{sample}.nameSort.bam"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
-        "{config[samtools]} sort -n -@ {threads} {input} >{output}"
+        "samtools sort -n -@ {threads} {input} >{output}"
 
 rule add_mate_info:
     """Use fixmate to fill in mate coordinates and mate related flags, since
@@ -82,8 +85,9 @@ rule add_mate_info:
     output:
         config['output_dir'] + "/dna_align/{sample}.mate.nameSort.bam"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
-        "{config[samtools]} fixmate -m -@ {threads} {input} {output}"
+        "samtools fixmate -m -@ {threads} {input} {output}"
 
 rule sort_bam_by_coord:
     """Sort the bam output by coordinates. Needed for markdup use later on."""
@@ -92,8 +96,9 @@ rule sort_bam_by_coord:
     output:
         config['output_dir'] + "/dna_align/{sample}.coordSort.mate.nameSort.bam"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
-        "{config[samtools]} sort -@ {threads} -o {output} {input}"
+        "samtools sort -@ {threads} -o {output} {input}"
 
 rule rm_dups:
     """Remove duplicates that may have occurred from PCR and index the
@@ -104,10 +109,11 @@ rule rm_dups:
         final_bam = config['output_dir'] + "/dna_align/{sample}.final.bam",
         final_bam_index = config['output_dir'] + "/dna_align/{sample}.final.bam.bai"
     threads: config['num_threads']
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/dna_align && "
-        "{config[samtools]} markdup -@ {threads} {input} {output.final_bam} && "
-        "{config[samtools]} index -b -@ {threads} {output.final_bam}"
+        "samtools markdup -@ {threads} {input} {output.final_bam} && "
+        "samtools index -b -@ {threads} {output.final_bam}"
 
 rule base_recal:
     """Recalibrate the base quality scores. They might be biased"""
@@ -117,9 +123,10 @@ rule base_recal:
         known_sites = config['dbSNP']
     output:
         config['output_dir'] + "/base_recal/{sample}.recal_data.table"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/base_recal && "
-        "{config[gatk]} BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
+        "gatk BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
 
 rule apply_base_recal:
     """Apply base quality score recalibration"""
@@ -129,8 +136,9 @@ rule apply_base_recal:
         recal_table = rules.base_recal.output
     output:
         config['output_dir'] + "/base_recal/{sample}.recal.final.bam"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
+        "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
 
 rule haplotype:
     """Make a file with annotated variants"""
@@ -139,8 +147,9 @@ rule haplotype:
         bam = rules.apply_base_recal.output if config['score_recal'] else rules.apply_base_recal.input.bam
     output:
         config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} HaplotypeCaller "
+        "gatk HaplotypeCaller "
         "-R {input.ref} -I {input.bam} -O {output} -ERC GVCF "
         "-G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation"
 
@@ -151,11 +160,14 @@ rule combine:
         vcf = expand(rules.haplotype.output, sample=config['SAMP_NAMES'])
     output:
         config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
-    run:
-        vcf_params = " ".join(['-V '+file for file in input.vcf])
-        shell(("{config[gatk]} CombineGVCFs -R {input.ref} -O {output} "
-               "-G StandardAnnotation -G AS_StandardAnnotation "
-               + vcf_params))
+    params:
+        # create a string with paths to each sample file preceded by '-V '
+        # ex: "-V samp1_path -V samp2_path -V samp3_path"
+        vcfs = lambda wildcards: " ".join(['-V '+file for file in expand(rules.haplotype.output, sample=config['SAMP_NAMES'])]),
+    conda: "envs/default.yaml"
+    shell:
+        "gatk CombineGVCFs -R {input.ref} -O {output} "
+        "-G StandardAnnotation -G AS_StandardAnnotation {params.vcfs}"
 
 rule genotype:
     """Perform joint genotyping on all of the samples"""
@@ -164,8 +176,9 @@ rule genotype:
         vcf = rules.combine.output
     output:
         config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
+        "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
         "-G StandardAnnotation -G AS_StandardAnnotation"
 
 rule variant_filter:
@@ -180,9 +193,10 @@ rule variant_filter:
     output:
         recal = config['output_dir'] + "/variant_filter/ALL.recal",
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
+    conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/variant_filter && "
-        "{config[gatk]} VariantRecalibrator -R {input.ref} -V {input.vcf} "
+        "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
         "--resource hapmap,known=false,training=true,truth=true,prior=15.0:{input.hapmap} "
         "--resource omni,known=false,training=true,truth=false,prior=12.0:{input.omni} "
         "--resource 1000G,known=false,training=true,truth=false,prior=10.0:{input.project1000G} "
@@ -199,8 +213,9 @@ rule apply_variant_filter:
         tranches = rules.variant_filter.output.tranches
     output:
         config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz"
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
+        "gatk ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
         "--ts-filter-level {config[target_sensitivity]} "
         "--recal-file {input.recal} --tranches-file {input.tranches} "
         "-O {output}"
@@ -212,13 +227,14 @@ rule variant_hard_filter:
         ref = config['ref_genome'],
         vcf = rules.genotype.output,
     params:
-        filter_expr = config['filter_expr']
+        filter_expr = config['filter_expr'],
         filter_name = "snakemake_hard_filter"
     output:
         rules.apply_variant_filter.output
+    conda: "envs/default.yaml"
     shell:
-        "{config[gatk]} VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
-        "-filter {params.filter_expr:q} --filter-name {params.filter_name:q}"
+        "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
+        "-filter \"{params.filter_expr}\" --filter-name \"{params.filter_name}\""
 
 
 rule filter_hets:
@@ -227,8 +243,9 @@ rule filter_hets:
         vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
     output:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
+    conda: "envs/default.yaml"
     shell:
         "zcat {input} | "
-        "{config[SnpSift]} filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
-        "gzip -c >{output} && "
-        "bgzip -c {output} | {config[tabix]} -p vcf {output}"
+        "SnpSift filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
+        "bgzip -c >{output} && "
+        "tabix -p vcf {output}"
