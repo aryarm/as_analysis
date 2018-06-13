@@ -33,7 +33,7 @@ rule all:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
 
 # run the following to execute the pipeline:
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-variant_calling --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 10 --use-conda >>${out_path}/out 2>&1 &
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-variant_calling --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 20 --use-conda >>${out_path}/out 2>&1 &
 
 rule align_dna:
     """Align DNA reads using BWA-MEM. Note that we use -R to specify read group
@@ -235,7 +235,6 @@ rule variant_hard_filter:
     shell:
         "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
         "-filter \"{params.filter_expr}\" --filter-name \"{params.filter_name}\""
-
 
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
