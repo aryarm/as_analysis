@@ -5,28 +5,41 @@
 
 # TODO: consider using snakemake validation
 
-# The path to a text file specifying where to find BAM files for each sample.
+# The path to a text file specifying where to find sorted BAM files for each sample.
 # Each row in the sample file should represent a different sample.
-# The sample file should have 6 columns (each separated by a single space):
+# The sample file should have 4 columns (each separated by a single space):
 #       <1000genomes_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>
-"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.txt"
+# Note that the 1000genomes_id must match whichever IDs are present in your VCF
+"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-counts.txt"
 
-# The path to an indexed reference genome for GATK
+# The path to an indexed reference genome in FASTA format
 "ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
-# For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
+# For example, a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
+
+# Gene annotation information in the GTF format. These can usually be obtained from GENCODE
+# For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
+"gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
 
 # The path to your WASP directory.
 # You can download WASP from https://github.com/bmvdgeijn/WASP
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
 
-# directory in which to output all of the output files
-# defined relative to whatever directory you execute the snakemake command in
+# Directory in which to output all of the generated files
+# This is defined relative to where you execute snakemake
 "output_dir" : "out"
 
-"vcf_file" : "out/genotypes/ALL"
+# An indexed, compressed VCF file with which to run WASP as_counts. This comes from the variant_calling pipeline
+"vcf_file" : "out/genotypes/ALL.vcf.gz"
+
+# A directory to write SNP HDF5 input files to
+"snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for each rule in the pipeline?
-"num_threads" : 4
+"num_threads" : 24
+
+
+# path to Rscript
+"Rscript" : "/iblm/netapp/home/amassarat/anaconda2/bin/Rscript"
