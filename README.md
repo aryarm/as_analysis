@@ -37,3 +37,5 @@ If you have anaconda installed (highly recommended), use the `--use-conda` flag 
 - [samtools](http://samtools.sourceforge.net/)
 - [BWA](http://bio-bwa.sourceforge.net/)
 - [tabix](https://github.com/samtools/tabix)
+
+In addition, there are a number of R packages required. You can find the full list of such packages at the top of the [find_imbalance.r](https://github.com/aryam7/as_analysis/blob/master/find_imbalance.r) script.
