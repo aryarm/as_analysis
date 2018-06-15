@@ -7,10 +7,10 @@
 
 # The path to a text file specifying where to find sorted BAM files for each sample.
 # Each row in the sample file should represent a different sample.
-# The sample file should have 4 columns (each separated by a single space):
+# The sample file should have 4 columns (each separated by a single tab):
 #       <1000genomes_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>
 # Note that the 1000genomes_id must match whichever IDs are present in your VCF
-"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-counts.txt"
+"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-counts.tsv"
 
 # The path to an indexed reference genome in FASTA format
 "ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"

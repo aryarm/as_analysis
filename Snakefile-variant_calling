@@ -16,7 +16,7 @@ def read_samples():
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
-        words = line.strip().split()
+        words = line.strip().split("\t")
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
@@ -25,11 +25,6 @@ SAMP = read_samples()
 # to generate files for
 if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(SAMP.keys())
-
-
-# """WASP needs some config values. Let's load them, so the user doesn't
-# have to."""
-# config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 
 
 rule all:

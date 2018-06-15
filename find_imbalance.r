@@ -10,9 +10,9 @@ source("allele_imbalance.r")
 args = commandArgs(trailingOnly = TRUE)
 # The path to a text file specifying where to find dna/rna count and gq files for each sample.
 # Each row in the sample file should represent a different sample.
-# The sample file should have 4 columns (each separated by a single space):
+# The sample file should have 4 columns (each separated by a single tab):
 #       <unique_sample_name> <dna_counts_path> <rna_counts_path> <genotype_qual_path>
-samples = read.table(args[1], sep=" ", header=F)
+samples = read.table(args[1], sep="\t", header=F)
 colnames(samples) = c("name", "dna", "rna", "gq")
 # import gene info from gencode
 genes= readGFF(args[2])

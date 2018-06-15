@@ -16,7 +16,7 @@ def read_samples():
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
-        words = line.strip().split()
+        words = line.strip().split("\t")
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 

@@ -16,7 +16,7 @@ def read_samples():
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
-        words = line.strip().split()
+        words = line.strip().split("\t")
         samp_dict[words[1]] = (words[2], words[3])
     return samp_dict
 
@@ -31,7 +31,7 @@ def read_1kg_samples():
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
-        words = line.strip().split()
+        words = line.strip().split("\t")
         samp_dict[words[1]] = words[0]
     return samp_dict
 
@@ -141,12 +141,12 @@ rule create_sample_file:
     params:
         samples = config['SAMP_NAMES']
     output:
-        config['output_dir'] + "/final/samples.txt"
+        config['output_dir'] + "/final/samples.tsv"
     run:
         shell("mkdir -p " + config['output_dir'] + "/final")
         sample_file = open(output[0], 'w+')
         for i in range(len(params.samples)):
-            sample_file.write(" ".join([params.samples[i], input.dna_counts[i], input.rna_counts[i], input.gq_file[i]]) + "\n")
+            sample_file.write("\t".join([params.samples[i], input.dna_counts[i], input.rna_counts[i], input.gq_file[i]]) + "\n")
         sample_file.close()
 
 rule detect_imbalance:
