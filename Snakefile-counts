@@ -122,7 +122,7 @@ rule get_as_counts:
         "  --haplotype {input.haplotype} "
         "  --samples {params.sample_names} "
         "  --genotype_sample {params.samp1kg} "
-        "  {input.bam} | gzip > {output}"
+        "  {input.bam} | grep '0|1' | gzip > {output}"
 
 rule create_sample_file:
     """create a sample file for rules.detect_imbalance, where for each sample,
