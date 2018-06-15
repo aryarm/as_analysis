@@ -122,11 +122,12 @@ rule sort_and_index_bam1:
     output:
         config["output_dir"] + "/map1_sort/{sample}.bam",
         config["output_dir"] + "/map1_sort/{sample}.bam.bai"
+    threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/map1_sort && "
-        "samtools sort -o {output[0]} {input} && "
-        "samtools index {output[0]}"
+        "samtools sort -@ {threads} -o {output[0]} {input} && "
+        "samtools index -@ {threads} {output[0]}"
 
 rule map_STAR_paired_end2:
     """map reads a second time using STAR"""
@@ -138,6 +139,7 @@ rule map_STAR_paired_end2:
         config["output_dir"] + "/map2/{sample}/Aligned.sortedByCoord.out.bam"
     params:
         prefix = config["output_dir"] + "/map2/{sample}/"
+    threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
         "mkdir -p {params.prefix} && "
@@ -154,11 +156,12 @@ rule sort_and_index_bam2:
     output:
         config["output_dir"] + "/map2_sort/{sample}.bam",
         config["output_dir"] + "/map2_sort/{sample}.bam.bai"
+    threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/map2_sort && "
-        "samtools sort -o {output[0]} {input} && "
-        "samtools index {output[0]}"
+        "samtools sort -@ {threads} -o {output[0]} {input} && "
+        "samtools index -@ {threads} {output[0]}"
 
 rule filter_remapped_reads:
     """filter reads from second mapping step"""
@@ -181,12 +184,13 @@ rule merge_bams:
     output:
         merge = config['output_dir'] + "/merge/{sample}.keep.merge.bam",
         sort = config['output_dir'] + "/merge/{sample}.keep.merge.sort.bam"
+    threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
         "mkdir -p {config[output_dir]}/merge && "
         "samtools merge {output.merge} {input.keep1} {input.keep2} && "
-        "samtools sort -o {output.sort} {output.merge} && "
-        "samtools index {output.sort}"
+        "samtools sort -@ {threads} -o {output.sort} {output.merge} && "
+        "samtools index -@ {threads} {output.sort}"
 
 rule rmdup_pe:
     """remove duplicate read pairs"""
@@ -195,9 +199,10 @@ rule rmdup_pe:
     output:
         rmdup = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.bam",
         sort = config['output_dir'] + "/rmdup/{sample}.keep.merge.rmdup.sort.bam"
+    threads: config['num_threads']
     conda: "envs/pytables2.yaml"
     shell:
         "mkdir -p {config[output_dir]}/rmdup && "
         "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
-        "samtools sort -o {output.sort} {output.rmdup} && "
-        "samtools index {output.sort}"
+        "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
+        "samtools index -@ {threads} {output.sort}"
