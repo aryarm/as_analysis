@@ -164,5 +164,5 @@ rule detect_imbalance:
         expand(config['output_dir'] + "/final/{sample}/result.csv",
                sample=config['SAMP_NAMES'])
     shell:
-        "{config[Rscript]} --no-save --no-restore find_imbalance.r "
+        "{config[Rscript]} --no-save --no-restore ../scripts/find_imbalance.r "
         "{input.sample_file} {input.gene_info} {params.output_dir}"
