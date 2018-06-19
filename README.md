@@ -1,3 +1,5 @@
+[![Snakemake](https://img.shields.io/badge/snakemake-≥5.1.4-brightgreen.svg?style=flat-square)](https://snakemake.bitbucket.io)
+
 # as_analysis
 A pipeline for detecting allelic imbalance from DNA and RNA seq reads
 
