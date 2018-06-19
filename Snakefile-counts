@@ -127,6 +127,16 @@ rule get_as_counts:
         "  --genotype_sample {params.sample_names} "
         "  {input.bam} | grep '0|1' | gzip > {output}"
 
+rule remove_indel_counts:
+    """remove indels from the counts files"""
+    input:
+        rules.get_as_counts.output
+    output:
+        config['output_dir'] + "/as_counts/{sample}/{type}.snps.as_counts.txt.gz"
+    shell:
+        "{config[Rscript]} --vanilla ../scripts/remove_indels.r {input} "
+        " | gzip >{output}"
+
 rule create_sample_file:
     """create a sample file for rules.detect_imbalance, where for each sample,
     there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
