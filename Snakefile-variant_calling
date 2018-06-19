@@ -235,10 +235,22 @@ rule variant_hard_filter:
         "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
         "-filter \"{params.filter_expr}\" --filter-name \"{params.filter_name}\""
 
+rule filter_snps:
+    """Extract only SNPs from the filtered VCF file and index the result"""
+    input:
+        ref = config['ref_genome'],
+        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
+    output:
+        config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz"
+    conda: "envs/default.yaml"
+    shell:
+        "gatk SelectVariants -R {input.ref} -V {input.vcf} -O {output} "
+        "--select-type-to-include SNP"
+
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
     input:
-        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
+        vcf = rules.filter_snps.output
     output:
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
     conda: "envs/default.yaml"
