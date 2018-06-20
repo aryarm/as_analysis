@@ -42,11 +42,11 @@ rule all:
     input:
         # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify which samples in the SAMP_NAMES variable above
-        expand(config['output_dir'] + "/final/{sample}/result.csv",
+        expand(config['output_dir'] + "/final/{sample}/result.csv.gz",
                sample=config['SAMP_NAMES'])
 
 # run the following to execute the pipeline:
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --use-conda >>${out_path}/out 2>&1 &
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 60 --use-conda >>${out_path}/out 2>&1 &
 
 rule split_vcf_by_sample:
     """Create VCF files for each sample from a single VCF file"""
@@ -132,18 +132,18 @@ rule remove_indel_counts:
     input:
         rules.get_as_counts.output
     output:
-        config['output_dir'] + "/as_counts/{sample}/{type}.snps.as_counts.txt.gz"
+        config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.snps.txt.gz"
     shell:
-        "{config[Rscript]} --vanilla ../scripts/remove_indels.r {input} "
-        " | gzip >{output}"
+        "{config[Rscript]} --vanilla scripts/remove_indels.r {input} "
+        "| gzip >{output}"
 
 rule create_sample_file:
     """create a sample file for rules.detect_imbalance, where for each sample,
     there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
     input:
-        dna_counts = expand(rules.get_as_counts.output,
+        dna_counts = expand(rules.remove_indel_counts.output,
                             sample=config['SAMP_NAMES'], type=["dna"]),
-        rna_counts = expand(rules.get_as_counts.output,
+        rna_counts = expand(rules.remove_indel_counts.output,
                             sample=config['SAMP_NAMES'], type=["rna"]),
         gq_file = expand(rules.create_gq_files.output,
                          sample=config['SAMP_NAMES'])
@@ -158,20 +158,34 @@ rule create_sample_file:
             sample_file.write("\t".join([params.samples[i], input.dna_counts[i], input.rna_counts[i], input.gq_file[i]]) + "\n")
         sample_file.close()
 
-rule detect_imbalance:
-    """quantify allelic imbalance in genes for each sample"""
+rule prepare_counts:
+    """prepare counts for detecting imbalance, adding gene info and calculating genotype error"""
     input:
         sample_file = rules.create_sample_file.output,
         gene_info = config['gene_info']
     params:
         output_dir = config['output_dir'] + "/final/"
     output:
-        expand(config['output_dir'] + "/final/{sample}/dna.csv",
+        expand(config['output_dir'] + "/final/{sample}/dna.csv.gz",
                sample=config['SAMP_NAMES']),
-        expand(config['output_dir'] + "/final/{sample}/rna.csv",
-               sample=config['SAMP_NAMES']),
-        expand(config['output_dir'] + "/final/{sample}/result.csv",
+        expand(config['output_dir'] + "/final/{sample}/rna.csv.gz",
                sample=config['SAMP_NAMES'])
     shell:
-        "{config[Rscript]} --no-save --no-restore ../scripts/find_imbalance.r "
-        "{input.sample_file} {input.gene_info} {params.output_dir}"
+        "{config[Rscript]} --no-save --no-restore scripts/prepare_counts.r "
+        "{input.sample_file} {input.gene_info} {params.output_dir} "
+        "&& gzip {config[output_dir]}/final/*/*.csv"
+
+rule detect_imbalance:
+    """quantify allelic imbalance in genes for each sample"""
+    input:
+        dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
+        rna = config['output_dir'] + "/final/{sample}/rna.csv.gz",
+        gene_info = config['gene_info']
+    params:
+        imbalance_script_path = "scripts/allele_imbalance.r"
+    output:
+        config['output_dir'] + "/final/{sample}/result.csv.gz"
+    shell:
+        "{config[Rscript]} --no-save --no-restore scripts/find_imbalance.r "
+        "{params.imbalance_script_path} {input.dna} {input.rna} {input.gene_info} "
+        "| gzip >{output}"
