@@ -137,43 +137,37 @@ rule remove_indel_counts:
         "{config[Rscript]} --vanilla scripts/remove_indels.r {input} "
         "| gzip >{output}"
 
-rule create_sample_file:
-    """create a sample file for rules.detect_imbalance, where for each sample,
-    there is a sample_name, dna_counts_file, rna_counts_file, and gq_file"""
+rule prepare_counts:
+    """prepare counts for detecting imbalance, adding gene info
+    and calculating genotype error"""
     input:
         dna_counts = expand(rules.remove_indel_counts.output,
                             sample=config['SAMP_NAMES'], type=["dna"]),
         rna_counts = expand(rules.remove_indel_counts.output,
                             sample=config['SAMP_NAMES'], type=["rna"]),
         gq_file = expand(rules.create_gq_files.output,
-                         sample=config['SAMP_NAMES'])
-    params:
-        samples = config['SAMP_NAMES']
-    output:
-        config['output_dir'] + "/final/samples.tsv"
-    run:
-        shell("mkdir -p " + config['output_dir'] + "/final")
-        sample_file = open(output[0], 'w+')
-        for i in range(len(params.samples)):
-            sample_file.write("\t".join([params.samples[i], input.dna_counts[i], input.rna_counts[i], input.gq_file[i]]) + "\n")
-        sample_file.close()
-
-rule prepare_counts:
-    """prepare counts for detecting imbalance, adding gene info and calculating genotype error"""
-    input:
-        sample_file = rules.create_sample_file.output,
+                         sample=config['SAMP_NAMES']),
         gene_info = config['gene_info']
     params:
+        samples = config['SAMP_NAMES'],
+        sample_file = config['output_dir'] + "/final/samples.tsv",
         output_dir = config['output_dir'] + "/final/"
     output:
         expand(config['output_dir'] + "/final/{sample}/dna.csv.gz",
                sample=config['SAMP_NAMES']),
         expand(config['output_dir'] + "/final/{sample}/rna.csv.gz",
                sample=config['SAMP_NAMES'])
-    shell:
-        "{config[Rscript]} --no-save --no-restore scripts/prepare_counts.r "
-        "{input.sample_file} {input.gene_info} {params.output_dir} "
-        "&& gzip {config[output_dir]}/final/*/*.csv"
+    run:
+        shell("mkdir -p " + config['output_dir'] + "/final")
+        sample_file = open(output[0], 'w+')
+        for i in range(len(params.samples)):
+            sample_file.write("\t".join([params.samples[i],
+                              input.dna_counts[i],
+                              input.rna_counts[i],
+                              input.gq_file[i]]) + "\n")
+        sample_file.close()
+        shell("{config[Rscript]} --no-save --no-restore scripts/prepare_counts.r {input.sample_file} {input.gene_info} {params.output_dir}")
+        shell("gzip {config[output_dir]}/final/*/*.csv")
 
 rule detect_imbalance:
     """quantify allelic imbalance in genes for each sample"""
