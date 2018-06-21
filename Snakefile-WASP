@@ -56,7 +56,6 @@ rule split_vcf_by_chr:
         dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/genotypes && "
         "SnpSift split {input} && "
         "gzip {config[output_dir]}/genotypes/*.vcf"
 
@@ -71,7 +70,6 @@ rule vcf2h5:
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
         "  --format vcf "
@@ -92,7 +90,6 @@ rule map_STAR_paired_end1:
         prefix = config["output_dir"] + "/map1/{sample}/"
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {params.prefix} && "
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
@@ -109,7 +106,6 @@ rule sort_and_index_bam1:
     threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/map1_sort && "
         "samtools sort -@ {threads} -o {output[0]} {input} && "
         "samtools index -@ {threads} {output[0]}"
 
@@ -129,7 +125,6 @@ rule find_intersecting_snps_paired_end:
         remap_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.to.remap.bam"
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/find_intersecting_snps && "
         "python {config[wasp_dir]}/mapping/find_intersecting_snps.py "
         "    --is_paired_end "
         "    --is_sorted "
@@ -153,7 +148,6 @@ rule map_STAR_paired_end2:
     threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {params.prefix} && "
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
@@ -170,7 +164,6 @@ rule sort_and_index_bam2:
     threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/map2_sort && "
         "samtools sort -@ {threads} -o {output[0]} {input} && "
         "samtools index -@ {threads} {output[0]}"
 
@@ -183,7 +176,6 @@ rule filter_remapped_reads:
         keep_bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam"
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/filter_remapped_reads && "
         "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
         "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
 
@@ -196,7 +188,6 @@ rule sort_filtered_bam:
     threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/filter_remapped_reads && "
         "samtools sort -@ {threads} -o {output} {input} && "
         "samtools index -@ {threads} {output}"
 
@@ -210,7 +201,6 @@ rule rmdup_pe:
     threads: config['num_threads']
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/rmdup && "
         "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
         "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
         "samtools index -@ {threads} {output.sort}"

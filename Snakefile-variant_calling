@@ -110,7 +110,6 @@ rule rm_dups:
     threads: config['num_threads']
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/dna_align && "
         "samtools markdup -@ {threads} {input} {output.final_bam} && "
         "samtools index -b -@ {threads} {output.final_bam}"
 
@@ -124,7 +123,6 @@ rule base_recal:
         config['output_dir'] + "/base_recal/{sample}.recal_data.table"
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/base_recal && "
         "gatk BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
 
 rule apply_base_recal:
@@ -194,7 +192,6 @@ rule variant_filter:
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
     conda: "envs/default.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/variant_filter && "
         "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
         "--resource hapmap,known=false,training=true,truth=true,prior=15.0:{input.hapmap} "
         "--resource omni,known=false,training=true,truth=false,prior=12.0:{input.omni} "

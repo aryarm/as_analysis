@@ -96,7 +96,6 @@ rule vcf2h5:
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[snp_h5_dir]} && "
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
         "  --format vcf "
@@ -118,7 +117,6 @@ rule get_as_counts:
         config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "envs/pytables2.yaml"
     shell:
-        "mkdir -p {config[output_dir]}/as_counts/{wildcards.sample} && "
         "python {config[wasp_dir]}/mapping/get_as_counts.py "
         "  --snp_tab {input.snp_tab} "
         "  --snp_index {input.snp_index} "
@@ -158,7 +156,6 @@ rule prepare_counts:
         expand(config['output_dir'] + "/final/{sample}/rna.csv.gz",
                sample=config['SAMP_NAMES'])
     run:
-        shell("mkdir -p " + config['output_dir'] + "/final")
         sample_file = open(output[0], 'w+')
         for i in range(len(params.samples)):
             sample_file.write("\t".join([params.samples[i],
