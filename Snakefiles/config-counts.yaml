@@ -3,8 +3,6 @@
 # the provided snakemake pipeline should first fill out this file with paths to
 # their own data, as the Snakefile requires it.
 
-# TODO: consider using snakemake validation
-
 # The path to a text file specifying where to find sorted BAM files for each sample.
 # Each row in the sample file should represent a different sample.
 # The sample file should have 4 columns (each separated by a single tab):
@@ -31,14 +29,14 @@
 # This is defined relative to where you execute snakemake
 "output_dir" : "out"
 
-# An indexed, compressed VCF file with which to run WASP as_counts. This comes from the variant_calling pipeline
+# An indexed VCF file with which to run WASP as_counts. This comes from the variant_calling pipeline
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
 
 # A directory to write SNP HDF5 input files to
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for each rule in the pipeline?
-"num_threads" : 24
+"num_threads" : 10
 
 
 # path to Rscript

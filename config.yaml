@@ -3,13 +3,11 @@
 # the provided snakemake pipeline should first fill out this file with paths to
 # their own data, as the Snakefile requires it.
 
-# TODO: consider using snakemake validation
-
 # The path to a text file specifying where to find read information for each sample.
 # Each row in the sample file should represent a different sample.
 # The sample file should have 4 columns (each separated by a single tab):
 #       <1000genomes_id> <unique_sample_id> <fastq1_dna_path> <fastq2_dna_path>
-"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-variant_calling.tsv"
+"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.tsv"
 
 # The path to a reference genome for DNA-seq alignment
 "ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
@@ -51,6 +49,10 @@
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
+# Gene annotation information in the GTF format. These can usually be obtained from GENCODE
+# For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
+"gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
+
 # The path to your WASP directory.
 # You can download WASP from https://github.com/bmvdgeijn/WASP
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
@@ -60,4 +62,8 @@
 "output_dir" : "out"
 
 # what are the maximum number of threads to use for the entire pipeline?
-"num_threads" : 24
+"num_threads" : 10
+
+
+# path to Rscript
+"Rscript" : "/iblm/netapp/home/amassarat/anaconda2/bin/Rscript"

@@ -3,8 +3,6 @@
 # the provided snakemake pipeline should first fill out this file with paths to
 # their own data, as the Snakefile requires it.
 
-# TODO: consider using snakemake validation
-
 # The path to a text file specifying where to find read information for each sample.
 # Each row in the sample file should represent a different sample.
 # The sample file should have 4 columns (each separated by a single tab):
@@ -36,4 +34,4 @@
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for the entire pipeline?
-"num_threads" : 24
+"num_threads" : 10

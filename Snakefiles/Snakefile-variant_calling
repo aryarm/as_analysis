@@ -1,34 +1,39 @@
-configfile: "config-variant_calling.yaml"
-
 import glob
 from snakemake.utils import min_version
 
 ##### set minimum snakemake version #####
 min_version("5.1.4")
 
+configfile: "config-variant_calling.yaml"
 
-def read_samples():
-    """Function to get names and fastq paths from a sample file specified
-    in the configuration. Input file is expected to have 4 columns:
-    <1000genomes_id> <unique_sample_id> <fastq1_path> <fastq2_path>. Modify
-    this function as needed to provide a dictionary of sample_id keys and
-    (fastq1, fastq1) values"""
-    f = open(config['sample_file'], "r")
-    samp_dict = {}
-    for line in f:
-        words = line.strip().split("\t")
-        samp_dict[words[1]] = (words[2], words[3])
-    return samp_dict
 
-SAMP = read_samples()
-# change SAMP_NAMES here to contain whichever sample names you'd like
-# to generate files for
+# check existence of SAMP variable. it may have already been defined if this
+# Snakefile is being included from somewhere else
+if 'SAMP' not in globals():
+    def read_samples():
+        """Function to get names and dna fastq paths from a sample file
+        specified in the configuration. Input file is expected to have 3
+        columns: <unique_sample_id> <fastq1_path> <fastq2_path>. Modify
+        this function as needed to provide a dictionary of sample_id keys and
+        (fastq1, fastq1) values"""
+        f = open(config['sample_file'], "r")
+        samp_dict = {}
+        for line in f:
+            words = line.strip().split("\t")
+            samp_dict[words[0]] = (words[1], words[2])
+        return samp_dict
+    SAMP = read_samples()
+
+# the user can change config['SAMP_NAMES'] here (or define it in the config
+# file) to contain whichever sample names they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(SAMP.keys())
 
 
 rule all:
     input:
+        # if you'd like to run the pipeline on only a subset of the samples,
+        # you should specify them in the config['SAMP_NAMES'] variable above
         config['output_dir'] + "/genotypes/ALL.vcf.gz"
 
 # run the following to execute the pipeline:

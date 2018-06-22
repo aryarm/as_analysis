@@ -1,0 +1,50 @@
+# This is the Snakemake configuration file that specifies paths and 
+# and options for the allele specific analysis pipeline. Anybody wishing to use
+# the provided snakemake pipeline should first fill out this file with paths to
+# their own data, as the Snakefile requires it.
+
+# The path to a text file specifying where to find read information for each sample.
+# Each row in the sample file should represent a different sample.
+# The sample file should have 3 columns (each separated by a single tab):
+#       <unique_sample_id> <fastq1_dna_path> <fastq2_dna_path>
+"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-variant_calling.tsv"
+
+# The path to a reference genome for DNA-seq alignment
+"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
+
+# the path to an indexed reference genome for BWA
+"ref_genome_bwa" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
+
+# Whether to perform GATK's base and variant score recalibration.
+# If this option is false, you don't need to provide the 
+# target_sensitivity, hapmap, omni, 1000G, and dbSNP config options.
+# However, if this option is false, you should provide the filter_expr config
+# option. You don't need to provide it if this option is true.
+# For more information about this config option, consider this article:
+#   https://software.broadinstitute.org/gatk/documentation/article.php?id=3225
+"score_recal" : false
+
+# An expression upon which to filter the SNPs.
+# See the following documentation for more information:
+#   https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.4.0/org_broadinstitute_hellbender_tools_walkers_filters_VariantFiltration.php#--filter-expression
+"filter_expr" : "QD < 2.0 || FS > 60.0 || MQ < 40.0 || SOR > 3.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"
+
+# GATK's VariantRecalibration "target sensitivity"
+# What percentage of the sites in the truth sets should the GATK filtering
+# model be able to accept? Increasing this number will allow more false
+# positives but decreasing it will cause you to lose true positives.
+"target_sensitivity" : 99
+
+# Paths to each of four GATK VariantRecalibrator files as described in https://software.broadinstitute.org/gatk/documentation/article.php?id=1259
+# These can usually be obtained from the GATK Resource Bundle: https://software.broadinstitute.org/gatk/download/bundle
+"hapmap" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/hapmap.vcf"
+"omni" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/omni.vcf"
+"1000G" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/1000G.vcf"
+"dbSNP" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/dbsnp.vcf"
+
+# directory in which to output all of the output files
+# defined relative to whatever directory you execute the snakemake command in
+"output_dir" : "out"
+
+# what are the maximum number of threads to use for the entire pipeline?
+"num_threads" : 10
