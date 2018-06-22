@@ -48,31 +48,19 @@ rule all:
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 60 --use-conda >>${out_path}/out 2>&1 &
 
-rule split_vcf_by_sample:
-    """Create VCF files for each sample from a single VCF file"""
+rule extract_gq_scores:
+    """Create a table containing GQ scores for each sample from the input vcf.
+    The file will have columns: CHROM, POS, REF, ALT, and GEN[{sample}].GQ"""
     input:
-        ref = config['ref_genome'],
         vcf = config['vcf_file']
+    params:
+        samples = ' '.join("'GEN[{0}].GQ'".format(w) for samp in list(SAMP_TO_1KG.values()))
     output:
-        config['output_dir'] + "/extract_gq/{sample}.vcf.gz"
+        config['output_dir'] + "/extract_gq/gq_subset.tsv.gz"
     conda: "envs/default.yaml"
     shell:
-        "gatk SelectVariants -R {input.ref} -V {input.vcf} "
-        "-sn {wildcards.sample} -O {output}"
-
-rule create_gq_files:
-    """Create tables containing GQ scores for each sample. The files will have
-    columns: CHROM, POS, REF, ALT, and {sample}.GQ"""
-    input:
-        ref = config['ref_genome'],
-        vcf = rules.split_vcf_by_sample.output
-    output:
-        config['output_dir'] + "/extract_gq/{sample}.gq_subset.table"
-    conda: "envs/default.yaml"
-    shell:
-        "gatk VariantsToTable -R {input.ref} -V {input.vcf} "
-        "-F CHROM -F POS -F REF -F ALT -GF GQ "
-        "-O {output}"
+        "SnpSift extractFields {input.vcf} 'CHROM' 'POS' 'REF' 'ALT' "
+        "{params.samples} | gzip >{output}"
 
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
@@ -143,11 +131,11 @@ rule prepare_counts:
                             sample=config['SAMP_NAMES'], type=["dna"]),
         rna_counts = expand(rules.remove_indel_counts.output,
                             sample=config['SAMP_NAMES'], type=["rna"]),
-        gq_file = expand(rules.create_gq_files.output,
-                         sample=config['SAMP_NAMES']),
+        gq_file = rules.extract_gq_scores.output,
         gene_info = config['gene_info']
     params:
         samples = config['SAMP_NAMES'],
+        gq_name = [SAMP_TO_1KG[samp] for samp in config['SAMP_NAMES']],
         sample_file = config['output_dir'] + "/final/samples.tsv",
         output_dir = config['output_dir'] + "/final/"
     output:
@@ -159,12 +147,11 @@ rule prepare_counts:
         sample_file = open(output[0], 'w+')
         for i in range(len(params.samples)):
             sample_file.write("\t".join([params.samples[i],
-                              input.dna_counts[i],
-                              input.rna_counts[i],
-                              input.gq_file[i]]) + "\n")
+                                         input.dna_counts[i],
+                                         input.rna_counts[i],
+                                         params.gq_name[i]]) + "\n")
         sample_file.close()
-        shell("{config[Rscript]} --no-save --no-restore scripts/prepare_counts.r {input.sample_file} {input.gene_info} {params.output_dir}")
-        shell("gzip {config[output_dir]}/final/*/*.csv")
+        shell("{config[Rscript]} --no-save --no-restore scripts/prepare_counts.r {input.sample_file} {input.gene_info} {input.gq_file} {params.output_dir}")
 
 rule detect_imbalance:
     """quantify allelic imbalance in genes for each sample"""

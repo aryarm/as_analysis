@@ -10,18 +10,21 @@ args = commandArgs(trailingOnly = TRUE)
 # The sample file should have 4 columns (each separated by a single tab):
 #       <unique_sample_name> <dna_counts_path> <rna_counts_path> <genotype_qual_path>
 samples = read.table(args[1], sep="\t", header=F)
-colnames(samples) = c("name", "dna", "rna", "gq")
+colnames(samples) = c("name", "dna", "rna", "gq_name")
 # import gene info from gencode
 genes= readGFF(args[2])
 g_genes = as(genes, "GRanges")
+# import gq data for all samples
+gq = read.table(gzfile(args[3]), sep="\t", header=T)
 # what is the output directory prefix? note that it must have a trailing slash
-output_dir = args[3]
+output_dir = args[4]
 
 import_counts = function(sample_paths){
   # import raw counts from WASP
   counts = ldply(apply(sample_paths, MARGIN=1, function(sample){
     counts = read.table(gzfile(sample[2]), sep=" ", header=F, stringsAsFactors=F)
     counts$sample = rep(sample[1], nrow(counts))
+    counts$gq_sample = rep(sample[3], nrow(counts))
     counts
   }), data.frame)
   # name columns such that they can be used in downstream analysis
@@ -33,23 +36,23 @@ import_counts = function(sample_paths){
   counts
 }
 
-dna = import_counts(samples[c("name", "dna")])
-rna = import_counts(samples[c("name", "rna")])
+dna = import_counts(samples[c("name", "dna", "gq_name")])
+rna = import_counts(samples[c("name", "rna", "gq_name")])
+rna$gq_name = NULL
 
-# import raw qg data from GATK
-gq = ldply(apply(samples[c("name", "gq")], MARGIN=1, function(sample){
-  gq = read.table(sample[2], sep="\t", header=T)
-  # rename GQ column so that it doesn't have the sample name in it
-  names(gq)[names(gq) == paste0(sample[1], ".GQ")] = "GQ"
-  gq$sample = rep(sample[1], nrow(gq))
-  gq
-}), data.frame)
-# create rsID column for later merging
+# process gq data
+# create rsID column for later merging and get rid of other columns
 gq$rsID = paste0(gq$CHROM, ":", gq$POS, "_", gq$REF, "/", gq$ALT)
+gq$CHROM = NULL
+gq$POS = NULL
+gq$REF = NULL
+gq$ALT = NULL
+# reshape the data frame so the columns are: rsID, sample, and GQ
+gq = melt(gq, id.vars="rsID", value.name="GQ", variable.name="gq_sample")
+# generate the genotype.error column
 gq$genotype.error = 10^{-(gq$GQ/10)}
 # retain only the cols that we need
-gq = gq[c("genotype.error", "rsID", "sample")]
-
+gq = gq[c("genotype.error", "rsID", "gq_sample")]
 
 # process allele specific counts
 proc_counts= function(counts, genes){
@@ -78,7 +81,8 @@ rna = proc_counts(rna, g_genes)
 rm(g_genes)
 
 # add genotype.error from gq to dna by JOINing on common column rsID
-dna = merge(dna, gq, by=c("sample", "rsID"), sort=F)
+dna = inner_join(dna, gq)
+dna$gq_sample = NULL
 # save space by removing gq, it isn't needed anymore
 rm(gq)
 
@@ -97,8 +101,8 @@ per_sample = function(sample_name, dna, rna) {
   if (!dir.exists(output_dir)){
     dir.create(output_dir, recursive = T)
   }
-  write.csv(dna, paste0(output_dir, "/dna.csv"), row.names = F)
-  write.csv(rna, paste0(output_dir, "/rna.csv"), row.names = F)
+  write.csv(dna, gzfile(paste0(output_dir, "/dna.csv.gz"), "w"), row.names = F)
+  write.csv(rna, gzfile(paste0(output_dir, "/rna.csv.gz"), "w"), row.names = F)
 }
 
 # get list of sample names
