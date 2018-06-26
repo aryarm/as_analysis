@@ -23,7 +23,7 @@ GLOBAL_SAMP = read_samples()
 # the user can change config['SAMP_NAMES'] here (or define it in the config
 # file) to contain whichever sample names they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
-    config['SAMP_NAMES'] = list(SAMP.keys())
+    config['SAMP_NAMES'] = list(GLOBAL_SAMP.keys())
 
 
 rule all:
@@ -35,20 +35,20 @@ rule all:
 
 
 # variant calling pipeline
-SAMP = {samp: GLOBAL_SAMP[samp][0] for samp in config['SAMP_NAMES']}
+SAMP1 = {samp: GLOBAL_SAMP[samp][0] for samp in config['SAMP_NAMES']}
 include: "Snakefiles/Snakefile-variant_calling"
 config['vcf_file'] = rules.filter_hets.output
 
 # WASP pipeline
-SAMP = {samp: GLOBAL_SAMP[samp][1] for samp in config['SAMP_NAMES']}
-SAMP_TO_VCF_ID = {samp: samp for samp, fastqs in GLOBAL_SAMP.iteritems()}
+SAMP2 = {samp: GLOBAL_SAMP[samp][1] for samp in config['SAMP_NAMES']}
+SAMP_TO_VCF_ID = {samp: samp for samp, fastqs in GLOBAL_SAMP.items()}
 config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 include: "Snakefiles/Snakefile-WASP"
 
-# allele specific counts analysis pipeline
-SAMP = {}
+# counts analysis pipeline
+SAMP3 = {}
 for samp in config['SAMP_NAMES']:
     dna = rules.rm_dups.output.final_bam.format(sample=samp)
     rna = rules.rmdup_pe.output.sort.format(sample=samp)
-    SAMP[samp] = (dna, rna)
+    SAMP3[samp] = (dna, rna)
 include: "Snakefiles/Snakefile-counts"

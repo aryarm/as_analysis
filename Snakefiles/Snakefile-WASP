@@ -4,12 +4,10 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("5.1.4")
 
-configfile: "config-WASP.yaml"
-
 
 # check existence of SAMP variable. it may have already been defined if this
 # Snakefile is being included from somewhere else
-if 'SAMP' not in globals():
+if 'SAMP2' not in globals():
     def read_samples():
         """Function to get names and fastq paths from a sample file specified
         in the configuration. Input file is expected to have 4 columns:
@@ -22,12 +20,12 @@ if 'SAMP' not in globals():
             words = line.strip().split("\t")
             samp_dict[words[1]] = (words[2], words[3])
         return samp_dict
-    SAMP = read_samples()
+    SAMP2 = read_samples()
 
 # the user can change config['SAMP_NAMES'] here (or define it in the config
 # file) to contain whichever sample names they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
-    config['SAMP_NAMES'] = list(SAMP.keys())
+    config['SAMP_NAMES'] = list(SAMP2.keys())
 
 # check existence of SAMP_TO_VCF_ID. it may have already been defined if this
 # Snakefile is being included from somewhere else
@@ -43,12 +41,13 @@ if 'SAMP_TO_VCF_ID' not in globals():
     SAMP_TO_VCF_ID = read_vcf_samples()
 
 
-rule all:
-    input:
+if not hasattr(rules, 'all'):
+    rule all:
         # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify them in the config['SAMP_NAMES'] variable above
-        expand(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
-               sample=config['SAMP_NAMES'])
+        input:
+            expand(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
+                   sample=config['SAMP_NAMES'])
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 60 --use-conda >>${out_path}/out 2>&1 &
@@ -86,8 +85,8 @@ rule vcf2h5:
 rule map_STAR_paired_end1:
     """map reads using STAR"""
     input:
-        fastq1 = lambda wildcards: SAMP[wildcards.sample][0],
-        fastq2 = lambda wildcards: SAMP[wildcards.sample][1],
+        fastq1 = lambda wildcards: SAMP2[wildcards.sample][0],
+        fastq2 = lambda wildcards: SAMP2[wildcards.sample][1],
         index = config["ref_genome_star"]
     output:
         config["output_dir"] + "/map1/{sample}/Aligned.out.bam"

@@ -4,12 +4,10 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("5.1.4")
 
-configfile: "config-counts.yaml"
-
 
 # check existence of SAMP variable. it may have already been defined if this
 # Snakefile is being included from somewhere else
-if 'SAMP' not in globals():
+if 'SAMP3' not in globals():
     def read_samples():
         """Function to get names and fastq paths from a sample file specified
         in the configuration. Input file is expected to have 4 columns:
@@ -22,12 +20,12 @@ if 'SAMP' not in globals():
             words = line.strip().split("\t")
             samp_dict[words[1]] = (words[2], words[3])
         return samp_dict
-    SAMP = read_samples()
+    SAMP3 = read_samples()
 
 # the user can change config['SAMP_NAMES'] here (or define it in the config
 # file) to contain whichever sample names they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
-    config['SAMP_NAMES'] = list(SAMP.keys())
+    config['SAMP_NAMES'] = list(SAMP3.keys())
 
 # check existence of SAMP_TO_VCF_ID. it may have already been defined if this
 # Snakefile is being included from somewhere else
@@ -43,12 +41,13 @@ if 'SAMP_TO_VCF_ID' not in globals():
     SAMP_TO_VCF_ID = read_vcf_samples()
 
 
-rule all:
-    input:
+if not hasattr(rules, 'all'):
+    rule all:
         # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify them in the config['SAMP_NAMES'] variable above
-        expand(config['output_dir'] + "/final/{sample}/result.csv.gz",
-               sample=config['SAMP_NAMES'])
+        input:
+            expand(config['output_dir'] + "/final/{sample}/result.csv.gz",
+                   sample=config['SAMP_NAMES'])
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-counts --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 60 --use-conda >>${out_path}/out 2>&1 &
@@ -59,7 +58,7 @@ rule extract_gq_scores:
     input:
         vcf = config['vcf_file']
     params:
-        samples = ' '.join("'GEN[{0}].GQ'".format(w) for samp in list(SAMP_TO_VCF_ID.values()))
+        samples = ' '.join("'GEN[{0}].GQ'".format(samp) for samp in list(SAMP_TO_VCF_ID.values()))
     output:
         config['output_dir'] + "/extract_gq/gq_subset.tsv.gz"
     conda: "envs/default.yaml"
@@ -67,40 +66,42 @@ rule extract_gq_scores:
         "SnpSift extractFields {input.vcf} 'CHROM' 'POS' 'REF' 'ALT' "
         "{params.samples} | gzip >{output}"
 
-rule split_vcf_by_chr:
-    """Split the provided VCF file by chromosome and gzip it for WASP"""
-    input:
-        vcf = config['vcf_file']
-    output:
-        dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
-    conda: "envs/default.yaml"
-    shell:
-        "SnpSift split {input} && "
-        "gzip {config[output_dir]}/genotypes/*.vcf"
+if not hasattr(rules, 'split_vcf_by_chr'):
+    rule split_vcf_by_chr:
+        """Split the provided VCF file by chromosome and gzip it for WASP"""
+        input:
+            vcf = config['vcf_file']
+        output:
+            dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
+        conda: "envs/default.yaml"
+        shell:
+            "SnpSift split {input} && "
+            "gzip {config[output_dir]}/genotypes/*.vcf"
 
-rule vcf2h5:
-    """Convert VCF data files to HDF5 format"""
-    input:
-        chrom = config['chrom_info'],
-        vcfs = rules.split_vcf_by_chr.output
-    output:
-        snp_index = config['snp_h5_dir'] + "/snp_index.h5",
-        snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-    conda: "envs/pytables2.yaml"
-    shell:
-        "{config[wasp_dir]}/snp2h5/snp2h5 "
-        "  --chrom {input.chrom} "
-        "  --format vcf "
-        "  --snp_index {output.snp_index} "
-        "  --snp_tab {output.snp_tab} "
-        "  --haplotype {output.haplotype} "
-        "  {input.vcfs}"
+if not hasattr(rules, 'vcf2h5'):
+    rule vcf2h5:
+        """Convert VCF data files to HDF5 format"""
+        input:
+            chrom = config['chrom_info'],
+            vcfs = rules.split_vcf_by_chr.output
+        output:
+            snp_index = config['snp_h5_dir'] + "/snp_index.h5",
+            snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
+            haplotype = config['snp_h5_dir'] + "/haplotype.h5"
+        conda: "envs/pytables2.yaml"
+        shell:
+            "{config[wasp_dir]}/snp2h5/snp2h5 "
+            "  --chrom {input.chrom} "
+            "  --format vcf "
+            "  --snp_index {output.snp_index} "
+            "  --snp_tab {output.snp_tab} "
+            "  --haplotype {output.haplotype} "
+            "  {input.vcfs}"
 
 rule get_as_counts:
     """get allele-specific read counts for SNPs"""
     input:
-        bam = lambda wildcards: SAMP[wildcards.sample][wildcards.type == "rna"],
+        bam = lambda wildcards: SAMP3[wildcards.sample][wildcards.type == "rna"],
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
@@ -119,7 +120,7 @@ rule get_as_counts:
         "  {input.bam} | grep '0|1' | gzip > {output}"
 
 rule remove_indel_counts:
-    """remove indels from the counts files"""
+    """remove indels from the counts files in case the input VCF contained any"""
     input:
         rules.get_as_counts.output
     output:

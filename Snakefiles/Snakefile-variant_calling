@@ -4,12 +4,10 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("5.1.4")
 
-configfile: "config-variant_calling.yaml"
-
 
 # check existence of SAMP variable. it may have already been defined if this
 # Snakefile is being included from somewhere else
-if 'SAMP' not in globals():
+if 'SAMP1' not in globals():
     def read_samples():
         """Function to get names and dna fastq paths from a sample file
         specified in the configuration. Input file is expected to have 3
@@ -22,19 +20,20 @@ if 'SAMP' not in globals():
             words = line.strip().split("\t")
             samp_dict[words[0]] = (words[1], words[2])
         return samp_dict
-    SAMP = read_samples()
+    SAMP1 = read_samples()
 
 # the user can change config['SAMP_NAMES'] here (or define it in the config
 # file) to contain whichever sample names they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
-    config['SAMP_NAMES'] = list(SAMP.keys())
+    config['SAMP_NAMES'] = list(SAMP1.keys())
 
 
-rule all:
-    input:
+if not hasattr(rules, 'all'):
+    rule all:
         # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify them in the config['SAMP_NAMES'] variable above
-        config['output_dir'] + "/genotypes/ALL.vcf.gz"
+        input:
+            config['output_dir'] + "/genotypes/ALL.vcf.gz"
 
 # run the following to execute the pipeline:
 # out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-variant_calling --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 20 --use-conda >>${out_path}/out 2>&1 &
@@ -44,8 +43,8 @@ rule align_dna:
     info for haplotype caller."""
     input:
         ref = config['ref_genome_bwa'],
-        fastq1 = lambda wildcards: SAMP[wildcards.sample][0],
-        fastq2 = lambda wildcards: SAMP[wildcards.sample][1]
+        fastq1 = lambda wildcards: SAMP1[wildcards.sample][0],
+        fastq2 = lambda wildcards: SAMP1[wildcards.sample][1]
     output:
         config['output_dir'] + "/dna_align/{sample}.sam"
     threads: config['num_threads']

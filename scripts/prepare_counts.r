@@ -108,10 +108,10 @@ per_sample = function(sample_name, dna, rna) {
 # get list of sample names
 sample_names= unique(dna$sample)
 # split dna and rna by sample, creating a list of dna/rna data frames for each sample
-dna_samples = split(dna, f = factor(dna$sample, levels=sample_names))
-rna_samples = split(rna, f = factor(rna$sample, levels=sample_names))
+dna = split(dna, f = factor(dna$sample, levels=sample_names))
+rna = split(rna, f = factor(rna$sample, levels=sample_names))
 # complete the per-sample pipeline with each dna/rna pair of data frames
-invisible(mapply(per_sample, sample_name=sample_names, dna=dna_samples, rna=rna_samples))
+invisible(mapply(per_sample, sample_name=sample_names, dna=dna, rna=rna))
 
 # if we got this far, we were probably successful
 quit(status=0)
