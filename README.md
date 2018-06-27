@@ -6,7 +6,7 @@ A pipeline for detecting allelic imbalance from DNA and RNA seq reads
 # files
 
 ### Snakefile
-A [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline defining rules for every step of the analysis. It uses DNA and RNA FASTQ files to generate a file summarizing allelic imbalance for each gene.
+A [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline defining rules for every step of the analysis. It uses DNA and RNA FASTQ files to generate a summary of allelic imbalance for each gene.
 
 ### config.yaml
 Defines options and input for the Snakemake pipeline.
