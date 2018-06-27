@@ -3,6 +3,7 @@ suppressMessages(library(rmutil))
 suppressMessages(library(ape))
 suppressMessages(library(rtracklayer))
 suppressMessages(library(dplyr))
+suppressMessages(library(reshape2))
 
 args = commandArgs(trailingOnly = TRUE)
 # The path to a text file specifying where to find dna/rna count and gq files for each sample.
@@ -81,7 +82,7 @@ rna = proc_counts(rna, g_genes)
 rm(g_genes)
 
 # add genotype.error from gq to dna by JOINing on common column rsID
-dna = inner_join(dna, gq)
+dna = inner_join(dna, gq, by="rsID")
 dna$gq_sample = NULL
 # save space by removing gq, it isn't needed anymore
 rm(gq)

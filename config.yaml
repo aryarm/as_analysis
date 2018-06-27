@@ -59,7 +59,7 @@
 
 # directory in which to output all of the output files
 # defined relative to whatever directory you execute the snakemake command in
-"output_dir" : "out"
+"output_dir" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"
 
 # what are the maximum number of threads to use for the entire pipeline?
 "num_threads" : 10

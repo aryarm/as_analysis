@@ -26,13 +26,14 @@ if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(GLOBAL_SAMP.keys())
 
 
+# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out";
+
 rule all:
     input:
         # if you'd like to run the pipeline on only a subset of the samples,
         # you should specify them in the config['SAMP_NAMES'] variable above
         expand(config['output_dir'] + "/final/{sample}/result.csv.gz",
                sample=config['SAMP_NAMES'])
-
 
 # variant calling pipeline
 SAMP1 = {samp: GLOBAL_SAMP[samp][0] for samp in config['SAMP_NAMES']}

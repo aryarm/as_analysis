@@ -49,16 +49,13 @@ if not hasattr(rules, 'all'):
             expand(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
                    sample=config['SAMP_NAMES'])
 
-# run the following to execute the pipeline:
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out"; snakemake -s Snakefile-WASP --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" -j 24 --config output_dir=${out_path} --latency-wait 60 --use-conda >>${out_path}/out 2>&1 &
-
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
         vcf = config['vcf_file']
     output:
         dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "SnpSift split {input} && "
         "gzip {config[output_dir]}/genotypes/*.vcf"
@@ -72,7 +69,7 @@ rule vcf2h5:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-    conda: "envs/pytables2.yaml"
+    conda: "../envs/pytables2.yaml"
     shell:
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
@@ -92,12 +89,13 @@ rule map_STAR_paired_end1:
         config["output_dir"] + "/map1/{sample}/Aligned.out.bam"
     params:
         prefix = config["output_dir"] + "/map1/{sample}/"
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
+            "--outSAMtype BAM Unsorted "
             "--outFileNamePrefix {params.prefix}"
 
 rule sort_and_index_bam1:
@@ -108,7 +106,7 @@ rule sort_and_index_bam1:
         config["output_dir"] + "/map1_sort/{sample}.bam",
         config["output_dir"] + "/map1_sort/{sample}.bam.bai"
     threads: config['num_threads']
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "samtools sort -@ {threads} -o {output[0]} {input} && "
         "samtools index -@ {threads} {output[0]}"
@@ -127,7 +125,7 @@ rule find_intersecting_snps_paired_end:
         fastq2 = config["output_dir"] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
         keep_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.keep.bam",
         remap_bam = config["output_dir"] + "/find_intersecting_snps/{sample}.to.remap.bam"
-    conda: "envs/pytables2.yaml"
+    conda: "../envs/pytables2.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/find_intersecting_snps.py "
         "    --is_paired_end "
@@ -150,12 +148,13 @@ rule map_STAR_paired_end2:
     params:
         prefix = config["output_dir"] + "/map2/{sample}/"
     threads: config['num_threads']
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
+            "--outSAMtype BAM Unsorted "
             "--outFileNamePrefix {params.prefix}"
 
 rule sort_and_index_bam2:
@@ -166,7 +165,7 @@ rule sort_and_index_bam2:
         config["output_dir"] + "/map2_sort/{sample}.bam",
         config["output_dir"] + "/map2_sort/{sample}.bam.bai"
     threads: config['num_threads']
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "samtools sort -@ {threads} -o {output[0]} {input} && "
         "samtools index -@ {threads} {output[0]}"
@@ -178,7 +177,7 @@ rule filter_remapped_reads:
         remap_bam = config['output_dir'] + "/map2_sort/{sample}.bam",
     output:
         keep_bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam"
-    conda: "envs/pytables2.yaml"
+    conda: "../envs/pytables2.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
         "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
@@ -190,7 +189,7 @@ rule sort_filtered_bam:
     output:
         config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam"
     threads: config['num_threads']
-    conda: "envs/default.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "samtools sort -@ {threads} -o {output} {input} && "
         "samtools index -@ {threads} {output}"
@@ -203,7 +202,7 @@ rule rmdup_pe:
         rmdup = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam",
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
     threads: config['num_threads']
-    conda: "envs/pytables2.yaml"
+    conda: "../envs/pytables2.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
         "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
