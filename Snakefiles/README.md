@@ -1,7 +1,10 @@
 Individual portions of the snakemake pipeline can also be run on their own. We have separate Snakefiles (and corresponding config files) for each of the following three portion of the pipeline:
-	
-1) Snakefile-variant_calling - align DNA fastq's and generate a filtered VCF containing heterozygous SNPs
 
-2) Snakefile-WASP - align RNA fastq's and filter using WASP to reduce mapping bias
+### Snakefile-variant_calling
+A snakemake pipeline for running the variant calling portion of the pipeline. It generates a filtered VCF of heterozygous SNPs from DNA seq reads.
 
-3) Snakefile-counts - retrieve counts of reads overlapping SNPs from BAM files generated in each of the previous portions of the pipeline and use them to find genes which demonstrate allelic imbalance
+### Snakefile-WASP
+A snakemake pipeline for running [WASP](https://github.com/bmvdgeijn/WASP). It generates an un-biased, filtered BAM file from RNA seq reads.
+
+### Snakefile-counts
+A snakemake pipeline for generating and analyzing counts of heterozygous SNPs and detecting genes with significant allelic imbalance from DNA and RNA BAM files.
