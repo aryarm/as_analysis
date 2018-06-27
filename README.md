@@ -15,9 +15,7 @@ Defines options and input for the Snakemake pipeline.
 An example bash script for executing the entire pipeline on an SGE cluster using snakemake.
 
 # how to execute the pipeline
-The pipeline is written as Snakefiles and so can be executed via [Snakemake](https://snakemake.readthedocs.io/en/stable/).
-
-Once you've installed snakemake and adapted the provided config files to your liking, you can execute each section of the pipeline individually using the `snakemake` command or all at once on an SGE cluster using the provided [run-all.bash](https://github.com/aryam7/as_analysis/blob/master/run-all.bash) script.
+The pipeline is written as Snakefiles and so can be executed via [Snakemake](https://snakemake.readthedocs.io/en/stable/). See `run-all.bash` for an example. Make sure to provide required input and options in the config file.
 
 If you have anaconda installed (highly recommended), use the `--use-conda` flag when calling `snakemake` to let it automatically handle all dependencies of the pipeline. Otherwise, you must manually install the following dependencies:
 - [pytables](https://www.pytables.org/) (v2)
@@ -29,4 +27,4 @@ If you have anaconda installed (highly recommended), use the `--use-conda` flag 
 - [BWA](http://bio-bwa.sourceforge.net/)
 - [tabix](https://github.com/samtools/tabix)
 
-Whether or not you use the `--use-conda` option, you must manually install a number of R packages. The full list of such packages is at the top of the [find_imbalance.r](https://github.com/aryam7/as_analysis/blob/master/find_imbalance.r) script.
+Whether or not you use the `--use-conda` option, you must manually install a number of R packages. The full list of such packages is at the top of the [find_imbalance.r](https://github.com/aryam7/as_analysis/blob/master/scripts/find_imbalance.r) script.
