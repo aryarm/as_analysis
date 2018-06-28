@@ -1,6 +1,6 @@
 # WASP Pipeline
 
-If you'd like to run the variant calling pipeline on its own, you should provide required input in `config-WASP.yaml`.
+If you'd like to run the WASP pipeline on its own, you should provide required input in `config-WASP.yaml`.
 
 This pipeline is an adaption of the one by [Graham McVicker](https://github.com/gmcvicker). You can find the original in the WASP repository [here](https://github.com/bmvdgeijn/WASP/blob/master/mapping/Snakefile).
 
