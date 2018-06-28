@@ -13,7 +13,7 @@ This pipeline is an adaption of the one by [Graham McVicker](https://github.com/
  - A STAR index of the aforementioned reference genome
 
 ## Other Inputs and Options
- - A text file containing names and lengths of all chromosomes in the assembly. You can usually download these from the [UCSC genome browser](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/) or use an example that comes with WASP.
+ - A text file containing names and lengths of all chromosomes in the assembly. You can usually download these from the [UCSC genome browser](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/) or use [the example that comes with WASP](https://github.com/bmvdgeijn/WASP/blob/master/examples/example_data/chromInfo.hg19.txt).
  - Your VCF must be converted to the HDF5 format before it can be used by WASP. You can optionally specify a directory to which you'd like these files written. Otherwise, the pipeline will default to `genotypes/snp_h5/`.
 
 ## Running the WASP pipeline on its own
