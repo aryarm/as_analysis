@@ -11,9 +11,14 @@ This pipeline is an adaption of the one by [Graham McVicker](https://github.com/
  - A VCF file containing SNPs for WASP. If you don't have this, you can generate it using the [variant calling pipeline](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.variant_calling.md). The VCF can contain any type of variant, but if you are performing our allele specific analysis, it is much faster to provide a VCF containing only heterozygous SNPs, since all other variants will be ignored anyway.
  - A reference genome for RNA-seq alignment
  - A STAR index of the aforementioned reference genome
- 
+
+## Other Inputs and Options
+ - A text file containing names and lengths of all chromosomes in the assembly. You can usually download these from the [UCSC genome browser](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/) or use an example that comes with WASP.
+ - Your VCF must be converted to the HDF5 format before it can be used by WASP. You can optionally specify a directory to which you'd like these files written. Otherwise, the pipeline will default to `genotypes/snp_h5/`.
 
 ## Running the WASP pipeline on its own
+Make sure to download [WASP](https://github.com/bmvdgeijn/WASP) before running the pipeline. In your config file, you must specify the path to the directory in which you downloaded it.
+
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
     snakemake -s Snakefiles/Snakefile-WASP --configfile Snakefiles/config-WASP.yaml --use-conda
@@ -28,5 +33,4 @@ The variant calling pipeline creates the following directories under the output 
  - map2 - results from second mapping of reads to genome
  - map2_sort - sorted BAM files from second mapping
  - filter_remapped_reads - results from filter_remapped_reads.py
- - merge - merged reads that should be kept because they did not overlap a SNP or because they overlapped a SNP and all alleles remapped to the same location.
  - rmdup - Final BAM files with duplicate reads removed. Only *sort* files need to be kept.
