@@ -1,6 +1,6 @@
 # Variant Calling Pipeline
 
-If you'd like to run the variant calling pipeline separately, you should provide required input in `config-variant_calling.yaml`.
+If you'd like to run the variant calling pipeline on its own, you should provide required input in `config-variant_calling.yaml`.
 
 ## Inputs
  - FASTQ files containing DNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing three columns: `unique_sample_name | dna_fastq_path_1 | dna_fastq_path_2` where each row is a different sample.
@@ -21,13 +21,13 @@ If you'd like to run the variant calling pipeline separately, you should provide
  
  - If you choose not to perform VQSR, the pipeline will default to [hard filtering](https://gatkforums.broadinstitute.org/gatk/discussion/2806/howto-apply-hard-filters-to-a-call-set) your variants. You will need to provide a [GATK filter expression](https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.4.0/org_broadinstitute_hellbender_tools_walkers_filters_VariantFiltration.php#--filter-expression), as described in [this GATK article](https://software.broadinstitute.org/gatk/documentation/article.php?id=1255). One example might be ```"QD < 2.0 || FS > 60.0 || MQ < 40.0 || SOR > 3.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"```.
 
-## Running the pipeline
+## Running the variant calling pipeline on its own
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
     snakemake -s Snakefiles/Snakefile-variant_calling --configfile Snakefiles/config-variant_calling.yaml --use-conda
 
 ## Output
-The Snakemake pipeline creates the following directories under the output directory specified in `config-variant_calling.yaml`. The `genotypes` folder will contain the final output, a filtered VCF containing heterozygous SNPs for all samples.
+The variant calling pipeline creates the following directories under the output directory specified in your config file. The `genotypes` folder will contain the final output, a filtered VCF containing heterozygous SNPs for all samples.
  - dna_align - output from BWA and samtools
  - base_recal - output from GATK's BQSR
  - haplotype - output from GATK's Haplotype Caller and a file `ALL.genotype.vcf.gz` containing genotyped variants for all samples
