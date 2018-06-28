@@ -22,7 +22,7 @@ If you'd like to run the variant calling pipeline separately, you should provide
  - If you choose not to perform VQSR, the pipeline will default to [hard filtering](https://gatkforums.broadinstitute.org/gatk/discussion/2806/howto-apply-hard-filters-to-a-call-set) your variants. You will need to provide a [GATK filter expression](https://software.broadinstitute.org/gatk/documentation/tooldocs/4.0.4.0/org_broadinstitute_hellbender_tools_walkers_filters_VariantFiltration.php#--filter-expression), as described in [this GATK article](https://software.broadinstitute.org/gatk/documentation/article.php?id=1255). One example might be ```"QD < 2.0 || FS > 60.0 || MQ < 40.0 || SOR > 3.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0"```.
 
 ## Running the pipeline
-When calling Snakemake, use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake handle all dependencies of the pipeline.
+When calling Snakemake, use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
     snakemake -s Snakefiles/Snakefile-variant_calling --configfile Snakefiles/config-variant_calling.yaml --use-conda
 
