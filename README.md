@@ -19,7 +19,7 @@ The pipeline is written as Snakefiles and so can be executed via [Snakemake](htt
 
 The entire pipeline is made up of three different sections. Each of these sections can be executed on their own but require you to fill out separate config files for each of them. See the [Snakefiles README](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.md) for more information.
 
-If you have anaconda installed (highly recommended), use the `--use-conda` flag when calling `snakemake` to let it automatically handle all dependencies of the pipeline. Otherwise, you must manually install the following dependencies:
+If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) installed (highly recommended), use the `--use-conda` flag when calling `snakemake` to let it automatically handle all dependencies of the pipeline. Otherwise, you must manually install the following dependencies:
 - [pytables](https://www.pytables.org/) (v2)
 - [pysam](https://github.com/pysam-developers/pysam)
 - [GATK](https://software.broadinstitute.org/gatk/gatk4) (v4)
