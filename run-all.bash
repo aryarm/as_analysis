@@ -42,8 +42,8 @@ snakemake \
 # 	1) Snakefile-variant_calling - align DNA fastq's and generate a filtered
 # 	   VCF containing heterozygous SNPs
 #				snakemake \
-#				-s Snakefile-variant_calling \
-#				--configfile config-variant_calling.yaml \
+#				-s Snakefiles/Snakefile-variant_calling \
+#				--configfile Snakefiles/config-variant_calling.yaml \
 #				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
 #				-j 24 \
 #				--config output_dir=${out_path} \
@@ -54,8 +54,8 @@ snakemake \
 # 	2) Snakefile-WASP - align RNA fastq's and filter using WASP to reduce
 # 	   mapping bias
 #				snakemake \
-#				-s Snakefile-WASP \
-#				--configfile config-WASP.yaml \
+#				-s Snakefiles/Snakefile-WASP \
+#				--configfile Snakefiles/config-WASP.yaml \
 #				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
 #				-j 24 \
 #				--config output_dir=${out_path} \
@@ -67,8 +67,8 @@ snakemake \
 # 	   files generated in each of the previous portions of the pipeline and use
 # 	   them to find genes which demonstrate allelic imbalance
 #				snakemake \
-#				-s Snakefile-counts \
-#				--configfile config-counts.yaml \
+#				-s Snakefiles/Snakefile-counts \
+#				--configfile Snakefiles/config-counts.yaml \
 #				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
 #				-j 24 \
 #				--config output_dir=${out_path} \

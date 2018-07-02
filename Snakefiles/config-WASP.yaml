@@ -6,7 +6,7 @@
 # The path to a text file specifying where to find read information for each sample.
 # Each row in the sample file should represent a different sample.
 # The sample file should have 4 columns (each separated by a single tab):
-#       <1000genomes_id> <unique_sample_id> <fastq1_rna_path> <fastq2_rna_path>
+#       <vcf_sample_id> <unique_sample_id> <fastq1_rna_path> <fastq2_rna_path>
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-WASP.tsv"
 
 # The path to a reference genome for DNA-seq alignment
@@ -27,7 +27,7 @@
 # defined relative to whatever directory you execute the snakemake command in
 "output_dir" : "out"
 
-# A VCF file with which to run WASP as_counts. This comes from the variant_calling pipeline
+# A VCF file with which to run WASP. This comes from the variant_calling pipeline
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
 
 # A directory to write SNP HDF5 input files to

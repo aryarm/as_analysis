@@ -20,6 +20,7 @@ err.rate = function(ref, alt, err){
 }
 
 # get dna and rna errors for allele_imbalance.r
+message("Calculating dna and rna error rates...")
 dna.err = err.rate(dna$ref.matches, dna$alt.matches, dna$errors)
 rna.err = err.rate(rna$ref.matches, rna$alt.matches, rna$errors)
 
@@ -34,6 +35,7 @@ rna.err = err.rate(rna$ref.matches, rna$alt.matches, rna$errors)
 dna = dna[c('ref.matches', 'N', 'genotype.error', 'rsID', 'gene', 'start')]
 rna = rna[c('ref.matches', 'N', 'rsID', 'gene', 'start')]
 # call allele_imbalance and store the result in res
+message("Calling allele.imbalance on ", nrow(dna), " SNPs...")
 res = as.data.frame(allele.imbalance(rna, dna, rna.err, dna.err))
 
 # rename col 'd' to 'a', since it represents estimates of allelic imbalance
@@ -41,5 +43,7 @@ colnames(res)[which(names(res) == "d")] = "a"
 # convert gene col from type factor to type char so dplyr is happy
 res$gene = as.character(res$gene)
 # add gene names to res. it only has gene_id right now
+message("Adding gene names to ", nrow(res)," genes...")
 res = left_join(res, unique(genes[, c("gene_name", "gene_id")]), by = c("gene"="gene_id"))
+message("Writing ", nrow(res), " genes to file...\n")
 write.csv(res, stdout(), row.names = F)
