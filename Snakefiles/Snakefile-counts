@@ -120,11 +120,13 @@ rule remove_indel_counts:
     """remove indels from the counts files in case the input VCF contained any"""
     input:
         rules.get_as_counts.output
+    params:
+        sep = "' '"
     output:
         config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.snps.txt.gz"
     shell:
         "{config[Rscript]} --vanilla scripts/remove_indels.r {input} "
-        "| gzip >{output}"
+        "{params.sep} | gzip >{output}"
 
 rule prepare_counts:
     """prepare counts for detecting imbalance, adding gene info
