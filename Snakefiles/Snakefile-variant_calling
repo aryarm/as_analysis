@@ -59,7 +59,7 @@ rule sam_to_bam:
     input:
         rules.align_dna.output
     output:
-        config['output_dir'] + "/dna_align/{sample}/aligned_dna.raw.bam"
+        temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.raw.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
@@ -83,7 +83,7 @@ rule add_mate_info:
     input:
         rules.sort_bam_by_name.output
     output:
-        config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.bam"
+        temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
@@ -94,7 +94,7 @@ rule sort_bam_by_coord:
     input:
         rules.add_mate_info.output
     output:
-        config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.coordSort.bam"
+        temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.coordSort.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
@@ -156,12 +156,12 @@ rule combine:
     input:
         ref = config['ref_genome'],
         vcf = expand(rules.haplotype.output, sample=config['SAMP_NAMES'])
-    output:
-        config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
     params:
         # create a string with paths to each sample file preceded by '-V '
         # ex: "-V samp1_path -V samp2_path -V samp3_path"
         vcfs = lambda wildcards: " ".join(['-V '+file for file in expand(rules.haplotype.output, sample=config['SAMP_NAMES'])]),
+    output:
+        config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
     conda: "../envs/default.yaml"
     shell:
         "gatk CombineGVCFs -R {input.ref} -O {output} "
