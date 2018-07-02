@@ -6,7 +6,7 @@
 # The path to a text file specifying where to find read information for each sample.
 # Each row in the sample file should represent a different sample.
 # The sample file should have 3 columns (each separated by a single tab):
-#       <unique_sample_id> <fastq1_dna_path> <fastq2_dna_path>
+#       <unique_sample_name> <fastq1_dna_path> <fastq2_dna_path>
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-variant_calling.tsv"
 
 # The path to a reference genome for DNA-seq alignment
