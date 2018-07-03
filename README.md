@@ -15,9 +15,9 @@ Defines options and input for the Snakemake pipeline.
 An example bash script for executing the entire pipeline on an SGE cluster using snakemake.
 
 # how to execute the pipeline
-The pipeline is written as Snakefiles and so can be executed via [Snakemake](https://snakemake.readthedocs.io/en/stable/). See `run-all.bash` for an example. Make sure to provide required input and options in the [config](https://github.com/aryam7/as_analysis/blob/master/config.yaml) file before executing.
+The pipeline is written as Snakefiles and so can be executed via [Snakemake](https://snakemake.readthedocs.io/en/stable/). See `run-all.bash` for an example. Make sure to provide required input and options in the [config file](https://github.com/aryam7/as_analysis/blob/master/config.yaml) before executing. For more information about what is required in the config file, see the [READMEs for each portion of the pipeline](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.md).
 
-The entire pipeline is made up of three different sections. Each of these sections can be executed on their own but require you to fill out separate config files for each of them. See the [Snakefiles README](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.md) for more information.
+The entire pipeline is made up of three different sections. We provide a single Snakefile to execute all of them at once, but if you'd like to execute each of these sections on their own, you must fill out separate config files for each of them. You can find more information about these portions of the pipeline and how to execute them in the [Snakefiles directory](https://github.com/aryam7/as_analysis/tree/master/Snakefiles).
 
 If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) installed (highly recommended), use the `--use-conda` flag when calling `snakemake` to let it automatically handle all dependencies of the pipeline. Otherwise, you must manually install the following dependencies:
 - [pytables](https://www.pytables.org/) (v2)
