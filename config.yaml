@@ -5,8 +5,8 @@
 
 # The path to a text file specifying where to find read information for each sample.
 # Each row in the sample file should represent a different sample.
-# The sample file should have 4 columns (each separated by a single tab):
-#       <1000genomes_id> <unique_sample_id> <fastq1_dna_path> <fastq2_dna_path>
+# The sample file should have 5 columns (each separated by a single tab):
+#       <unique_sample_name> <fastq1_dna_path> <fastq2_dna_path> <fastq1_rna_path> <fastq2_rna_path>
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples.tsv"
 
 # The path to a reference genome for DNA-seq alignment
@@ -25,7 +25,7 @@
 # option. You don't need to provide it if this option is true.
 # For more information about this config option, consider this article:
 #   https://software.broadinstitute.org/gatk/documentation/article.php?id=3225
-"score_recal" : false
+"score_recal" : true
 
 # An expression upon which to filter the SNPs.
 # See the following documentation for more information:
