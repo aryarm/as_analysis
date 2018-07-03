@@ -24,7 +24,7 @@ When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_start
     snakemake -s Snakefiles/Snakefile-WASP --configfile Snakefiles/config-WASP.yaml --use-conda
 
 ## Output
-The WASP pipeline creates the following directories under the output directory specified in your config file. The `rmdup` folder will contain the final output, filtered BAM files containing RNA reads for each sample.
+The WASP pipeline creates the following directories under the output directory specified in your config file. The `rmdup` folder will contain the final output, filtered BAM files containing RNA reads that overlap a SNP in each sample.
  - genotypes - your input VCF, split by chromosome
  - genotypes/snp_h5 - your input VCF in HDF5 format
  - map1 - results from first mapping of reads to genome
