@@ -22,7 +22,7 @@
 # If this option is false, you don't need to provide the 
 # target_sensitivity, hapmap, omni, 1000G, and dbSNP config options.
 # However, if this option is false, you should provide the filter_expr config
-# option. You don't need to provide it if this option is true.
+# option instead.
 # For more information about this config option, consider this article:
 #   https://software.broadinstitute.org/gatk/documentation/article.php?id=3225
 "score_recal" : true
