@@ -51,5 +51,8 @@ SAMP3 = {}
 for samp in config['SAMP_NAMES']:
     dna = rules.rm_dups.output.final_bam.format(sample=samp)
     rna = rules.rmdup_pe.output.sort.format(sample=samp)
-    SAMP3[samp] = (dna, rna)
+    if config['rna_only']:
+        SAMP3[samp] = (rna,)
+    else:
+        SAMP3[samp] = (dna, rna)
 include: "Snakefiles/Snakefile-counts"

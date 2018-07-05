@@ -49,6 +49,12 @@
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
+# If the <dna_bam_path> column is left out in the sample file, or if you set
+# the rna_only option below to true, the pipeline will default to running the
+# rna-only version of the analysis, in which DNA read counts are ignored. This
+# performs a more conservative test.
+"rna_only" : true
+
 # Gene annotation information in the GTF format. These can usually be obtained from GENCODE
 # For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
 "gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"

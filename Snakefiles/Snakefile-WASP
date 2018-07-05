@@ -73,7 +73,7 @@ rule vcf2h5:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-    conda: "../envs/pytables2.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "{config[wasp_dir]}/snp2h5/snp2h5 "
         "  --chrom {input.chrom} "
@@ -129,7 +129,7 @@ rule find_intersecting_snps_paired_end:
         fastq2 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
         keep_bam = temp(config['output_dir'] + "/find_intersecting_snps/{sample}.keep.bam"),
         remap_bam = config['output_dir'] + "/find_intersecting_snps/{sample}.to.remap.bam"
-    conda: "../envs/pytables2.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/find_intersecting_snps.py "
         "    --is_paired_end "
@@ -181,7 +181,7 @@ rule filter_remapped_reads:
         remap_bam = rules.sort_and_index_bam2.output.bam,
     output:
         temp(config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam")
-    conda: "../envs/pytables2.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
         "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
@@ -206,7 +206,7 @@ rule rmdup_pe:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
     threads: config['num_threads']
-    conda: "../envs/pytables2.yaml"
+    conda: "../envs/default.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
         "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
