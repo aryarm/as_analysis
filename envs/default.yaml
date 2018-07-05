@@ -2,6 +2,11 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
+  - numpy
+  - scipy
+  - pysam>=0.8.4
+  - hdf5
+  - pytables=3
   - gatk4=4.0.4
   - snpsift
   - star

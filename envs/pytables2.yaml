@@ -1,4 +1,0 @@
-dependencies:
-  - python=2
-  - pytables=2
-  - pysam>=0.8.4
