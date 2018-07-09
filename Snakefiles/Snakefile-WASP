@@ -58,7 +58,7 @@ rule split_vcf_by_chr:
     input:
         vcf = config['vcf_file']
     output:
-        dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
+        dynamic(config['output_dir'] + "/genotypes/ALL.{chr_num}.vcf.gz")
     conda: "../envs/default.yaml"
     shell:
         "SnpSift split {input} && "
