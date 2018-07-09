@@ -93,7 +93,9 @@ rule map_STAR_paired_end1:
         prefix = config['output_dir'] + "/map1/{sample}/"
     output:
         temp(config['output_dir'] + "/map1/{sample}/Aligned.out.bam")
+    threads: config['num_threads']
     conda: "../envs/default.yaml"
+    shadow: "minimal"
     shell:
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
@@ -153,6 +155,7 @@ rule map_STAR_paired_end2:
         temp(config['output_dir'] + "/map2/{sample}/Aligned.out.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
+    shadow: "minimal"
     shell:
         "STAR --runThreadN {threads} "
             "--genomeDir {input.index} "
@@ -184,7 +187,7 @@ rule filter_remapped_reads:
     conda: "../envs/default.yaml"
     shell:
         "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
-        "  {input.to_remap_bam} {input.remap_bam} {output.keep_bam}"
+        "  {input.to_remap_bam} {input.remap_bam} {output}"
 
 rule sort_filtered_bam:
     """sort 'keep' BAM file from rules.filter_remapped_reads for rules.rmdup_pe"""
