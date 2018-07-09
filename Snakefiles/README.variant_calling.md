@@ -1,6 +1,6 @@
 # Variant Calling Pipeline
 
-If you'd like to run the variant calling pipeline on its own, you should provide required input in `config-variant_calling.yaml`.
+If you'd like to run the variant calling pipeline on its own, you should provide required input in [configs/config-variant_calling.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-variant_calling.yaml).
 
 ## Inputs
  - FASTQ files containing DNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing three columns: `unique_sample_name | dna_fastq_path_1 | dna_fastq_path_2` where each row is a different sample.
@@ -24,7 +24,7 @@ If you'd like to run the variant calling pipeline on its own, you should provide
 ## Running the variant calling pipeline on its own
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
-    snakemake -s Snakefiles/Snakefile-variant_calling --configfile Snakefiles/config-variant_calling.yaml --use-conda
+    snakemake -s Snakefiles/Snakefile-variant_calling --configfile configs/config-variant_calling.yaml --use-conda
 
 ## Output
 The variant calling pipeline creates the following directories under the output directory specified in your config file. The `genotypes` folder will contain the final output, a filtered VCF containing heterozygous SNPs for all samples.

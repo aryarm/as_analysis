@@ -37,41 +37,48 @@ snakemake \
 
 # Individual portions of the snakemake pipeline can also be run on their own.
 # See the "Snakefiles/" directory for Snakefiles of each of the following
-# three portions of the pipeline (and their config files):
+# three portions of the pipeline (and the "configs/" directory for their
+# corresponding config files):
+# 
 # 
 # 	1) Snakefile-variant_calling - align DNA fastq's and generate a filtered
 # 	   VCF containing heterozygous SNPs
-#				snakemake \
-#				-s Snakefiles/Snakefile-variant_calling \
-#				--configfile Snakefiles/config-variant_calling.yaml \
-#				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
-#				-j 24 \
-#				--config output_dir=${out_path} \
-#				--latency-wait 60 \
-#				--use-conda \
-#				>>${out_path}/out 2>&1
+# 
+# snakemake \
+# -s Snakefiles/Snakefile-variant_calling \
+# --configfile configs/config-variant_calling.yaml \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# -j 24 \
+# --config output_dir=${out_path} \
+# --latency-wait 60 \
+# --use-conda \
+# >>${out_path}/out 2>&1
+# 
 # 
 # 	2) Snakefile-WASP - align RNA fastq's and filter using WASP to reduce
 # 	   mapping bias
-#				snakemake \
-#				-s Snakefiles/Snakefile-WASP \
-#				--configfile Snakefiles/config-WASP.yaml \
-#				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
-#				-j 24 \
-#				--config output_dir=${out_path} \
-#				--latency-wait 60 \
-#				--use-conda \
-#				>>${out_path}/out 2>&1
+# 
+# snakemake \
+# -s Snakefiles/Snakefile-WASP \
+# --configfile configs/config-WASP.yaml \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# -j 24 \
+# --config output_dir=${out_path} \
+# --latency-wait 60 \
+# --use-conda \
+# >>${out_path}/out 2>&1
+# 
 # 
 # 	3) Snakefile-counts - retrieve counts of reads overlapping SNPs from BAM
 # 	   files generated in each of the previous portions of the pipeline and use
 # 	   them to find genes which demonstrate allelic imbalance
-#				snakemake \
-#				-s Snakefiles/Snakefile-counts \
-#				--configfile Snakefiles/config-counts.yaml \
-#				--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
-#				-j 24 \
-#				--config output_dir=${out_path} \
-#				--latency-wait 60 \
-#				--use-conda \
-#				>>${out_path}/out 2>&1
+# 
+# snakemake \
+# -s Snakefiles/Snakefile-counts \
+# --configfile configs/config-counts.yaml \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# -j 24 \
+# --config output_dir=${out_path} \
+# --latency-wait 60 \
+# --use-conda \
+# >>${out_path}/out 2>&1

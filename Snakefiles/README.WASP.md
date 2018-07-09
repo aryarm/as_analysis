@@ -1,6 +1,6 @@
 # WASP Pipeline
 
-If you'd like to run the WASP pipeline on its own, you should provide required input in `config-WASP.yaml`.
+If you'd like to run the WASP pipeline on its own, you should provide required input in [configs/config-WASP.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-WASP.yaml).
 
 This pipeline is an adaption of the one by [Graham McVicker](https://github.com/gmcvicker). You can find the original in the WASP repository [here](https://github.com/bmvdgeijn/WASP/blob/master/mapping/Snakefile). Note that our pipeline differs from the original in several ways, the most notable being that reads that don't overlap a SNP are discarded in our pipeline.
 
@@ -21,7 +21,7 @@ Make sure to download [WASP](https://github.com/bmvdgeijn/WASP) before running t
 
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
-    snakemake -s Snakefiles/Snakefile-WASP --configfile Snakefiles/config-WASP.yaml --use-conda
+    snakemake -s Snakefiles/Snakefile-WASP --configfile configs/config-WASP.yaml --use-conda
 
 ## Output
 The WASP pipeline creates the following directories under the output directory specified in your config file. The `rmdup` folder will contain the final output, filtered BAM files containing RNA reads that overlap a SNP in each sample.

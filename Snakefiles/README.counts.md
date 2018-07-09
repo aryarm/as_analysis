@@ -1,6 +1,6 @@
 # Pipeline for Analyzing Read Counts
 
-If you'd like to run the counts pipeline on its own, you should provide required input in `config-counts.yaml`.
+If you'd like to run the counts pipeline on its own, you should provide required input in [config-counts.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-counts.yaml).
 
 ## Inputs
  - FASTQ files containing DNA and RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | dna_bam_path | rna_bam_path` where each row is a different sample.
@@ -22,7 +22,7 @@ You must also download several R dependencies manually. The full list of these p
 
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use options `-s` and `--configfile` to specify the location of the Snakefile and its corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
-    snakemake -s Snakefiles/Snakefile-counts --configfile Snakefiles/config-counts.yaml --use-conda
+    snakemake -s Snakefiles/Snakefile-counts --configfile configs/config-counts.yaml --use-conda
 
 ## Output
 The counts pipeline creates the following directories under the output directory specified in your config file. The `final` folder will contain the final output, a list of the resulting genes with allelic imbalance and their confidence.
