@@ -9,9 +9,6 @@
 #       <vcf_sample_id> <unique_sample_name> <fastq1_rna_path> <fastq2_rna_path>
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-WASP.tsv"
 
-# The path to a reference genome for DNA-seq alignment
-"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
-
 # the path to an indexed reference genome for STAR
 "ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"
 

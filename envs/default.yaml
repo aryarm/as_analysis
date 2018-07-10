@@ -5,7 +5,7 @@ dependencies:
   - numpy
   - scipy
   - pysam>=0.8.4
-  - hdf5
+  - hdf5>=1.8
   - pytables=3
   - gatk4=4.0.4
   - snpsift
