@@ -174,11 +174,10 @@ rule genotype:
         vcf = rules.combine.output
     output:
         config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
         "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
-        "-G StandardAnnotation -G AS_StandardAnnotation -nt {threads}"
+        "-G StandardAnnotation -G AS_StandardAnnotation "
 
 rule variant_filter:
     """Filter variants by QD, FS, MQ, MQRankSum, ReadPosRankSum, and SOR"""
@@ -192,10 +191,9 @@ rule variant_filter:
     output:
         recal = config['output_dir'] + "/variant_filter/ALL.recal",
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} -nt {threads} "
+        "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
         "--resource hapmap,known=false,training=true,truth=true,prior=15.0:{input.hapmap} "
         "--resource omni,known=false,training=true,truth=false,prior=12.0:{input.omni} "
         "--resource 1000G,known=false,training=true,truth=false,prior=10.0:{input.project1000G} "
@@ -244,11 +242,10 @@ rule filter_snps:
         vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
     output:
         config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
         "gatk SelectVariants -R {input.ref} -V {input.vcf} -O {output} "
-        "--select-type-to-include SNP -nt {threads}"
+        "--select-type-to-include SNP"
 
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
