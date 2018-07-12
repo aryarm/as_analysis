@@ -10,7 +10,7 @@ dna = read.table(gzfile(args[1]), sep=" ", header=F, stringsAsFactors=F, col.nam
 # import rna counts for this sample
 rna = read.table(gzfile(args[2]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
 # import gq data for this sample
-gq = read.table(gzfile(args[3]), sep="\t", header=T, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"))
+gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"))
 # import gene info from gencode
 genes= as(readGFF(args[4]), "GRanges")
 # what is the output directory prefix? note that it should have a trailing slash

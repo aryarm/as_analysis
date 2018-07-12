@@ -60,17 +60,15 @@ if not hasattr(rules, 'all'):
 
 rule extract_gq_scores:
     """Create tables containing GQ scores for each sample from the input vcf.
-    The files will have columns: CHROM, POS, REF, ALT, and GEN[{sample}].GQ"""
+    The files will have columns: CHROM, POS, REF, ALT, and GQ"""
     input:
         vcf = config['vcf_file']
-    params:
-        sample = lambda wildcards: "'GEN[{0}].GQ'".format(SAMP_TO_VCF_ID[wildcards.sample])
     output:
-        config['output_dir'] + "/extract_gq/{sample}.tsv.gz"
+        config['output_dir'] + "/extract_gq/{vcf_sample}.tsv.gz"
     conda: "../envs/default.yaml"
     shell:
-        "SnpSift extractFields {input.vcf} 'CHROM' 'POS' 'REF' 'ALT' "
-        "{params.sample} | gzip >{output}"
+        "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%GQ]\n' "
+        "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
 
 if not hasattr(rules, 'split_vcf_by_chr'):
     rule split_vcf_by_chr:
@@ -148,6 +146,7 @@ rule get_as_counts:
         "  --other_as_counts {output.other_as} "
         "  --read_counts {output.read_counts} "
         "  --txt_counts {output.txt_counts} "
+        "  --data_type uint16 "
         "{input.bam}"
 
 rule extract_hets:
@@ -185,7 +184,7 @@ if config['rna_only']:
                 ),
             gq_file = lambda wildcards:
                 rules.extract_gq_scores.output[0].format(
-                    sample=SAMP_TO_VCF_ID[wildcards.sample]
+                    vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
             gene_info = config['gene_info']
         params:
@@ -226,7 +225,7 @@ else:
                 ),
             gq_file = lambda wildcards:
                 rules.extract_gq_scores.output[0].format(
-                    sample=SAMP_TO_VCF_ID[wildcards.sample]
+                    vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
             gene_info = config['gene_info']
         params:

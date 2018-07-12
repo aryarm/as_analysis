@@ -14,3 +14,4 @@ dependencies:
   - samtools
   - bwa
   - tabix
+  - bcftools

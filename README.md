@@ -27,6 +27,7 @@ If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) inst
 - [samtools](http://samtools.sourceforge.net/)
 - [BWA](http://bio-bwa.sourceforge.net/)
 - [tabix](https://github.com/samtools/tabix)
+- [bcftools](http://www.htslib.org/download/)
 
 Note that our pipeline uses [WASP](https://www.biorxiv.org/content/early/2014/11/07/011221) (v3.x), which is not available from Anaconda. You must [manually install it](https://github.com/bmvdgeijn/WASP). Our pipeline automatically handles WASP's dependencies, but you can see the [WASP README](https://github.com/bmvdgeijn/WASP/blob/master/README.md) if you'd like to install these dependencies manually.
 
