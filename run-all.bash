@@ -8,8 +8,8 @@
 # An example bash script demonstrating how to run the entire snakemake pipeline
 # on an SGE cluster
 # This script creates two separate log files:
-# 	1) out - the basic snakemake log of completed rules
-# 	2) qout - a more detailed log of the progress of each rule and any errors
+# 	1) log - the basic snakemake log of completed rules
+# 	2) qlog - a more detailed log of the progress of each rule and any errors
 
 # you can specify a directory for all output here:
 out_path="out"
@@ -21,13 +21,13 @@ mkdir -p "$out_path"
 # paths to the fastq files for each of your samples.
 
 snakemake \
---cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+--cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qlog" \
 -j 24 \
 --config output_dir="${out_path}" \
 --latency-wait 60 \
 --use-conda \
 -k \
->>"${out_path}/out" 2>&1
+&>"${out_path}/log"
 
 
 
@@ -41,44 +41,44 @@ snakemake \
 # corresponding config files):
 # 
 # 
-# 	1) Snakefile-variant_calling - align DNA fastq's and generate a filtered
-# 	   VCF containing heterozygous SNPs
+# 1) Snakefile-variant_calling - align DNA fastq's and generate a filtered
+#    VCF containing heterozygous SNPs
 # 
 # snakemake \
 # -s Snakefiles/Snakefile-variant_calling \
 # --configfile configs/config-variant_calling.yaml \
-# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qlog" \
 # -j 24 \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
-# >>${out_path}/out 2>&1
+# >>${out_path}/log 2>&1
 # 
 # 
-# 	2) Snakefile-WASP - align RNA fastq's and filter using WASP to reduce
-# 	   mapping bias
+# 2) Snakefile-WASP - align RNA fastq's and filter using WASP to reduce
+#    mapping bias
 # 
 # snakemake \
 # -s Snakefiles/Snakefile-WASP \
 # --configfile configs/config-WASP.yaml \
-# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qlog" \
 # -j 24 \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
-# >>${out_path}/out 2>&1
+# >>${out_path}/log 2>&1
 # 
 # 
-# 	3) Snakefile-counts - retrieve counts of reads overlapping SNPs from BAM
-# 	   files generated in each of the previous portions of the pipeline and use
-# 	   them to find genes which demonstrate allelic imbalance
+# 3) Snakefile-counts - retrieve counts of reads overlapping SNPs from BAM
+#    files generated in each of the previous portions of the pipeline and use
+#    them to find genes which demonstrate allelic imbalance
 # 
 # snakemake \
 # -s Snakefiles/Snakefile-counts \
 # --configfile configs/config-counts.yaml \
-# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qout" \
+# --cluster "qsub -t 1 -V -q iblm.q -j y -o ${out_path}/qlog" \
 # -j 24 \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
-# >>${out_path}/out 2>&1
+# >>${out_path}/log 2>&1
