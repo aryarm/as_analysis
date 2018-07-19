@@ -2,6 +2,7 @@
 
 # as_analysis
 A Snakemake pipeline for detecting allelic imbalance from DNA and RNA seq reads
+![Pipeline Skeleton](https://drive.google.com/uc?export=view&id=1xefUeBPLLKfFfn9vu_IY2PHUBfC8XmST)
 
 # files
 

@@ -53,7 +53,7 @@ rule align_dna:
         "{input.fastq1} {input.fastq2} > {output}"
 
 rule sam_to_bam:
-    """Convert a SAM file to its more compressed counterpart. Note that -u to
+    """Convert a SAM file to its more compressed counterpart. Note we use -u to
     create an uncompressed bam file. We use -q to filter alignments with MAPQ
     scores less than 20."""
     input:
