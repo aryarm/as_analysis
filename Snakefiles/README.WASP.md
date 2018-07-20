@@ -4,6 +4,10 @@ If you'd like to run the WASP pipeline on its own, you should provide required i
 
 This pipeline is an adaption of the one by [Graham McVicker](https://github.com/gmcvicker). You can find the original in the WASP repository [here](https://github.com/bmvdgeijn/WASP/blob/master/mapping/Snakefile). Note that our pipeline differs from the original in several ways, the most notable being that reads that don't overlap a SNP are discarded in our pipeline.
 
+Here is a skeleton diagram of our adaption of the pipeline:
+
+![Pipeline Skeleton](https://drive.google.com/uc?export=view&id=1dhN4f0TAiwslIXiTRa_Vit7ybKMC4Yil)
+
 ## Inputs
  - FASTQ files containing RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | rna_fastq_path_1 | rna_fastq_path_2` where each row is a different sample.
  
