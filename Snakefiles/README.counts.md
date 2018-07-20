@@ -1,6 +1,6 @@
 # Pipeline for Analyzing Read Counts
 
-If you'd like to run the counts pipeline on its own, you should provide required input in [config-counts.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-counts.yaml).
+If you'd like to run the counts pipeline on its own, you should provide required input in [configs/config-counts.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-counts.yaml).
 
 ## Inputs
  - FASTQ files containing DNA and RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | dna_bam_path | rna_bam_path` where each row is a different sample.

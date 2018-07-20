@@ -1,6 +1,4 @@
-![Pipeline Skeleton](https://drive.google.com/uc?export=view&id=1xefUeBPLLKfFfn9vu_IY2PHUBfC8XmST)
-
-Individual portions of the snakemake pipeline can also be run on their own. We have separate Snakefiles (and corresponding config files) for each of the following three portions of the pipeline:
+We provide a single [Snakefile](https://github.com/aryam7/as_analysis/blob/master/Snakefile) to execute the entire pipeline at once, but individual portions of the snakemake pipeline can also be run on their own. We have separate Snakefiles (and corresponding config files) for each of the following three portions of the pipeline:
 
 ### [Variant Calling](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/Snakefile-variant_calling)
 A snakemake pipeline for running the variant calling portion of the pipeline. It generates a filtered VCF of heterozygous SNPs from DNA FASTQs. See our [variant calling README](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.variant_calling.md) for more information.
