@@ -20,6 +20,8 @@ The pipeline is written as Snakefiles and so can be executed via [Snakemake](htt
 
 The entire pipeline is made up of three different sections. We provide a single [Snakefile](https://github.com/aryam7/as_analysis/blob/master/Snakefile) to execute all of them at once, but you can also execute each of these sections on their own. For each section that you'd like to run separately, you must fill out a new config file. You can find more information about these individual portions of the pipeline and how to execute them in the [Snakefiles directory](https://github.com/aryam7/as_analysis/tree/master/Snakefiles).
 
+By default, the pipeline will automatically delete some files it deems unnecessary (ex: unsorted copies of a BAM). You can opt to keep these files instead by providing the `--notemp` flag to Snakemake when executing the pipeline.
+
 # dependencies
 If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) installed (highly recommended), use the `--use-conda` flag when calling `snakemake` to let it automatically handle all dependencies of the pipeline. Otherwise, you must manually install the following dependencies:
 - [GATK](https://software.broadinstitute.org/gatk/gatk4) (v4.x)
