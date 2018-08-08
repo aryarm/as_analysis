@@ -157,7 +157,7 @@ rule extract_hets:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
     shell:
-        "zcat {input} | grep '0|1' | gzip >{output}"
+        "zcat {input} | grep -E ' 0\|1 | 1\|0 ' | gzip >{output}"
 
 rule remove_indel_counts:
     """remove indels from the counts files in case the input VCF contained
