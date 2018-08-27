@@ -56,12 +56,13 @@ if not hasattr(rules, 'all'):
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
-        vcf = config['vcf_file']
+        vcf = config['vcf_file'],
+        vcf_index = config['vcf_file'] + ".tbi"
     output:
         dynamic(config['output_dir'] + "/genotypes/ALL.{chr_num}.vcf.gz")
     conda: "../envs/default.yaml"
     shell:
-        "SnpSift split {input} && "
+        "SnpSift split {input.vcf} && "
         "gzip {config[output_dir]}/genotypes/*.vcf"
 
 rule vcf2h5:

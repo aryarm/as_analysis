@@ -133,22 +133,24 @@ rule apply_base_recal:
         bam = rules.rm_dups.output.final_bam,
         recal_table = rules.base_recal.output
     output:
-        config['output_dir'] + "/base_recal/{sample}.recal.final.bam"
+        bam = config['output_dir'] + "/base_recal/{sample}.recal.final.bam",
+        index = config['output_dir'] + "/base_recal/{sample}.recal.final.bai"
     conda: "../envs/default.yaml"
     shell:
-        "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output}"
+        "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output.bam}"
 
 rule haplotype:
     """Make a file with annotated variants"""
     input:
         ref = config['ref_genome'],
-        bam = rules.apply_base_recal.output if config['score_recal'] else rules.apply_base_recal.input.bam
+        bam = rules.apply_base_recal.output.bam if config['score_recal'] else rules.apply_base_recal.input.bam
     output:
-        config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz"
+        vcf = config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz",
+        index = config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
         "gatk HaplotypeCaller "
-        "-R {input.ref} -I {input.bam} -O {output} -ERC GVCF "
+        "-R {input.ref} -I {input.bam} -O {output.vcf} -ERC GVCF "
         "-G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation"
 
 rule combine:
@@ -161,35 +163,38 @@ rule combine:
         # ex: "-V samp1_path -V samp2_path -V samp3_path"
         vcfs = lambda wildcards: " ".join(['-V '+file for file in expand(rules.haplotype.output, sample=config['SAMP_NAMES'])]),
     output:
-        config['output_dir'] + "/haplotype/ALL.g.vcf.gz"
+        vcf = config['output_dir'] + "/haplotype/ALL.g.vcf.gz",
+        index = config['output_dir'] + "/haplotype/ALL.g.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
-        "gatk CombineGVCFs -R {input.ref} -O {output} "
+        "gatk CombineGVCFs -R {input.ref} -O {output.vcf} "
         "-G StandardAnnotation -G AS_StandardAnnotation {params.vcfs}"
 
 rule genotype:
     """Perform joint genotyping on all of the samples"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.combine.output
+        vcf = rules.combine.output.vcf
     output:
-        config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz"
+        vcf = config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz",
+        index = config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
-        "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output} "
+        "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "-G StandardAnnotation -G AS_StandardAnnotation "
 
 rule variant_filter:
     """Filter variants by QD, FS, MQ, MQRankSum, ReadPosRankSum, and SOR"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.genotype.output,
+        vcf = rules.genotype.output.vcf,
         hapmap = config['hapmap'],
         omni = config['omni'],
         project1000G = config['1000G'],
         dbsnp = config['dbSNP']
     output:
         recal = config['output_dir'] + "/variant_filter/ALL.recal",
+        recal_idx = config['output_dir'] + "/variant_filter/ALL.recal.idx",
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
     conda: "../envs/default.yaml"
     shell:
@@ -205,33 +210,35 @@ rule apply_variant_filter:
     """Create a file with only variants that have passed filtration"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.genotype.output,
+        vcf = rules.genotype.output.vcf,
         recal = rules.variant_filter.output.recal,
         tranches = rules.variant_filter.output.tranches
     output:
-        config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz"
+        vcf = config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz",
+        index = config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
         "gatk ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
         "--ts-filter-level {config[target_sensitivity]} "
         "--recal-file {input.recal} --tranches-file {input.tranches} "
-        "-O {output}"
+        "-O {output.vcf}"
 
 rule variant_hard_filter:
     """Create a file with only variants that pass a hard filter.
     This is an alternative to rules.variant_filter"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.genotype.output,
+        vcf = rules.genotype.output.vcf,
     params:
         filter_expr = config['filter_expr'],
         filter_name = "snakemake_hard_filter"
     output:
-        config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz"
+        vcf = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz",
+        index = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz.tbi"
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output} "
+        "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "-nt {threads} -filter \"{params.filter_expr}\" "
         "--filter-name \"{params.filter_name}\""
 
@@ -239,23 +246,25 @@ rule filter_snps:
     """Extract only SNPs from the filtered VCF file and index the result"""
     input:
         ref = config['ref_genome'],
-        vcf = rules.apply_variant_filter.output if config['score_recal'] else rules.variant_hard_filter.output
+        vcf = rules.apply_variant_filter.output.vcf if config['score_recal'] else rules.variant_hard_filter.output.vcf
     output:
-        config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz"
+        vcf = config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz",
+        index = config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
-        "gatk SelectVariants -R {input.ref} -V {input.vcf} -O {output} "
+        "gatk SelectVariants -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "--select-type-to-include SNP"
 
 rule filter_hets:
     """Extract heterozygotes from the filtered VCF file and index the result"""
     input:
-        vcf = rules.filter_snps.output
+        vcf = rules.filter_snps.output.vcf
     output:
-        config['output_dir'] + "/genotypes/ALL.vcf.gz"
+        vcf = config['output_dir'] + "/genotypes/ALL.vcf.gz",
+        index = config['output_dir'] + "/genotypes/ALL.vcf.gz.tbi"
     conda: "../envs/default.yaml"
     shell:
         "zcat {input} | "
         "SnpSift filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "
-        "bgzip -c >{output} && "
-        "tabix -p vcf {output}"
+        "bgzip -c >{output.vcf} && "
+        "tabix -p vcf {output.vcf}"

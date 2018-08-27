@@ -38,7 +38,7 @@ rule all:
 # variant calling pipeline
 SAMP1 = {samp: GLOBAL_SAMP[samp][0] for samp in config['SAMP_NAMES']}
 include: "Snakefiles/Snakefile-variant_calling"
-config['vcf_file'] = rules.filter_hets.output
+config['vcf_file'] = rules.filter_hets.output.vcf
 
 # WASP pipeline
 SAMP2 = {samp: GLOBAL_SAMP[samp][1] for samp in config['SAMP_NAMES']}
