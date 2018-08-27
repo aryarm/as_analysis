@@ -27,6 +27,7 @@ snakemake \
 --latency-wait 60 \
 --use-conda \
 -k \
+--restart-times 2 \
 &>"${out_path}/log"
 
 
@@ -52,6 +53,8 @@ snakemake \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
+# -k \
+# --restart-times 2 \
 # >>${out_path}/log 2>&1
 # 
 # 
@@ -66,6 +69,8 @@ snakemake \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
+# -k \
+# --restart-times 2 \
 # >>${out_path}/log 2>&1
 # 
 # 
@@ -81,4 +86,6 @@ snakemake \
 # --config output_dir=${out_path} \
 # --latency-wait 60 \
 # --use-conda \
+# --restart-times 2 \
+# -k \
 # >>${out_path}/log 2>&1
