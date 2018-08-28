@@ -3,6 +3,7 @@ channels:
   - r
   - mdekstrand
   - conda-forge
+  - nodefaults
 dependencies:
   - numpy
   - scipy
