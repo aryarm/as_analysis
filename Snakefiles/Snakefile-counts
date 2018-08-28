@@ -170,7 +170,7 @@ rule remove_indel_counts:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.snps.txt.gz"
     shell:
-        "{config[Rscript]} --vanilla scripts/remove_indels.r {input} "
+        "Rscript --vanilla scripts/remove_indels.r {input} "
         "{params.sep} | gzip >{output}"
 
 if config['rna_only']:
@@ -192,7 +192,7 @@ if config['rna_only']:
         output:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         shell:
-            "{config[Rscript]} --no-save --no-restore scripts/"
+            "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
             "{input.gq_file} {input.gene_info} {params.output_dir}"
 
@@ -206,7 +206,7 @@ if config['rna_only']:
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         shell:
-            "{config[Rscript]} --no-save --no-restore scripts/"
+            "Rscript --no-save --no-restore scripts/"
             "find_imbalance-rna.r {params.imbalance_script_path} "
             "{input.rna} {input.gene_info} "
             "| gzip >{output}"
@@ -234,7 +234,7 @@ else:
             dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         shell:
-            "{config[Rscript]} --no-save --no-restore scripts/"
+            "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
             "{input.gq_file} {input.gene_info} {params.output_dir}"
 
@@ -249,7 +249,7 @@ else:
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         shell:
-            "{config[Rscript]} --no-save --no-restore scripts/"
+            "Rscript --no-save --no-restore scripts/"
             "find_imbalance.r {params.imbalance_script_path} "
             "{input.dna} {input.rna} {input.gene_info} "
             "| gzip >{output}"

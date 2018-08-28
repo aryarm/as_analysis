@@ -40,7 +40,3 @@
 
 # what are the maximum number of threads to use for each rule in the pipeline?
 "num_threads" : 10
-
-
-# path to Rscript
-"Rscript" : "/iblm/netapp/home/amassarat/anaconda2/bin/Rscript"
