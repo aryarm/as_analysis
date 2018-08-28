@@ -27,7 +27,8 @@
 # A VCF file with which to run WASP. This comes from the variant_calling pipeline
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
 
-# A directory to write SNP HDF5 input files to
+# If you already have SNP HDF5 files, specify the directory of the files here
+# Otherwise, they will be created in this location
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for the entire pipeline?

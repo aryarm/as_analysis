@@ -31,10 +31,11 @@
 # This is defined relative to where you execute snakemake
 "output_dir" : "out"
 
-# An indexed VCF file with which to run WASP as_counts. This comes from the variant_calling pipeline
+# An indexed VCF file with which to run WASP bam2h5. This comes from the variant_calling pipeline
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
 
-# A directory to write SNP HDF5 input files to
+# If you already have SNP HDF5 files, specify the directory of the files here
+# Otherwise, they will be created in this location
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for each rule in the pipeline?

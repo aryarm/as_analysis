@@ -115,15 +115,15 @@ rule get_as_counts:
     params:
         sample_name = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample]
     output:
-        ref_as = temp(
+        ref_as_counts = temp(
             config['output_dir'] +
             "/as_counts/{sample}/{type}.ref_as_counts.h5"
         ),
-        alt_as = temp(
+        alt_as_counts = temp(
             config['output_dir'] +
             "/as_counts/{sample}/{type}.alt_as_counts.h5"
         ),
-        other_as = temp(
+        other_as_counts = temp(
             config['output_dir'] +
             "/as_counts/{sample}/{type}.other_as_counts.h5"
         ),
@@ -141,9 +141,9 @@ rule get_as_counts:
         "  --snp_tab {input.snp_tab} "
         "  --haplotype {input.haplotype} "
         "  --individual {params.sample_name} "
-        "  --ref_as_counts {output.ref_as} "
-        "  --alt_as_counts {output.alt_as} "
-        "  --other_as_counts {output.other_as} "
+        "  --ref_as_counts {output.ref_as_counts} "
+        "  --alt_as_counts {output.alt_as_counts} "
+        "  --other_as_counts {output.other_as_counts} "
         "  --read_counts {output.read_counts} "
         "  --txt_counts {output.txt_counts} "
         "  --data_type uint16 "
