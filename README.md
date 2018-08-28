@@ -31,7 +31,9 @@ If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) inst
 - [BWA](http://bio-bwa.sourceforge.net/)
 - [tabix](https://github.com/samtools/tabix)
 - [bcftools](http://www.htslib.org/download/)
+- [plyr](https://www.rdocumentation.org/packages/plyr)
+- [rmutil](https://www.rdocumentation.org/packages/rmutil/)
+- [rtracklayer](https://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
+- [dplyr](https://www.rdocumentation.org/packages/dplyr)
 
-Note that our pipeline uses [WASP](https://www.biorxiv.org/content/early/2014/11/07/011221) (v3.x), which is not available from Anaconda. You must [manually install it](https://github.com/bmvdgeijn/WASP). Our pipeline automatically handles WASP's dependencies, but you can see the [WASP README](https://github.com/bmvdgeijn/WASP/blob/master/README.md) if you'd like to install these dependencies manually.
-
-Regardless of whether you use the `--use-conda` option, you must manually install a number of R packages. The full list of such packages is at the top of the [find_imbalance.r](https://github.com/aryam7/as_analysis/blob/master/scripts/find_imbalance.r) script.
+Note that our pipeline uses [WASP](https://www.biorxiv.org/content/early/2014/11/07/011221) (v3.x), which is not available from Anaconda. You must [manually install it](https://github.com/bmvdgeijn/WASP). The `--use-conda` option will automatically handle WASP's dependencies, but you can see the [WASP README](https://github.com/bmvdgeijn/WASP/blob/master/README.md) if you'd like to install these dependencies manually.
