@@ -63,11 +63,12 @@ rule get_WASP:
         makefile = config['wasp_dir'] + "/snp2h5/Makefile"
     conda: "../envs/default.yaml"
     shell:
+        "[ ! -d \"{config[wasp_dir]}\"] && "
         "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
-        "tar zxf - -C {config[wasp_dir]} --strip-components 1"
+        "tar zxf - -C \"{config[wasp_dir]}\" --strip-components 1"
 
 rule install_WASP:
-    """Make WASP if it hasn't been compiled yet"""
+    """Make WASP snp2h5 if it hasn't been compiled yet"""
     input:
         rules.get_WASP.output.makefile
     output:
