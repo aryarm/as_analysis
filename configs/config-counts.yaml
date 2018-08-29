@@ -23,8 +23,8 @@
 # For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
 "gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
 
-# The path to your WASP directory.
-# You can download WASP from https://github.com/bmvdgeijn/WASP
+# If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
+# Otherwise, specify the location of the directory in which you'd like it installed
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
 
 # Directory in which to output all of the generated files

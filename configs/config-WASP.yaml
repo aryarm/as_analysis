@@ -16,8 +16,8 @@
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
-# The path to your WASP directory.
-# You can download WASP from https://github.com/bmvdgeijn/WASP
+# If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
+# Otherwise, specify the location of the directory in which you'd like it installed
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
 
 # directory in which to output all of the output files

@@ -70,6 +70,33 @@ rule extract_gq_scores:
         "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%GQ]\n' "
         "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
 
+if not hasattr(rules, 'get_WASP'):
+    rule get_WASP:
+        """Download WASP if doesn't exist"""
+        output:
+            bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
+            makefile = config['wasp_dir'] + "/snp2h5/Makefile"
+        conda: "../envs/default.yaml"
+        shell:
+            "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
+            "tar zxf - -C {config[wasp_dir]} --strip-components 1"
+
+if not hasattr(rules, 'install_WASP'):
+    rule install_WASP:
+        """Make WASP if it hasn't been compiled yet"""
+        input:
+            rules.get_WASP.output.makefile
+        output:
+            snp2h5_script = config['wasp_dir'] + "/snp2h5/snp2h5"
+        conda: "../envs/default.yaml"
+        shell:
+            "conda_path=\"$CONDA_PREFIX\" && "
+            "if [ -z $conda_path ]; then "
+            "conda_path=\"$(dirname $(dirname $(which conda)))\"; "
+            "fi && [ ! -z $conda_path ] && "
+            "(cd \"{config[wasp_dir]}/snp2h5\" && "
+            "make -s HDF_INSTALL=\"$conda_path\")"
+
 if not hasattr(rules, 'split_vcf_by_chr'):
     rule split_vcf_by_chr:
         """Split the provided VCF file by chromosome and gzip it for WASP"""
@@ -87,14 +114,15 @@ if not hasattr(rules, 'vcf2h5'):
         """Convert VCF data files to HDF5 format"""
         input:
             chrom = config['chrom_info'],
-            vcfs = rules.split_vcf_by_chr.output
+            vcfs = rules.split_vcf_by_chr.output,
+            snp2h5_script = rules.install_WASP.output.snp2h5_script
         output:
             snp_index = config['snp_h5_dir'] + "/snp_index.h5",
             snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
             haplotype = config['snp_h5_dir'] + "/haplotype.h5"
         conda: "../envs/default.yaml"
         shell:
-            "{config[wasp_dir]}/snp2h5/snp2h5 "
+            "{input.snp2h5_script} "
             "  --chrom {input.chrom} "
             "  --format vcf "
             "  --snp_index {output.snp_index} "
@@ -108,10 +136,11 @@ rule get_as_counts:
         bam = lambda wildcards: SAMP3[wildcards.sample][
             wildcards.type == "rna" and not config['rna_only']
         ],
-        snp_index = config["snp_h5_dir"] + "/snp_index.h5",
-        snp_tab = config["snp_h5_dir"] + "/snp_tab.h5",
+        snp_index = config['snp_h5_dir'] + "/snp_index.h5",
+        snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5",
-        chrom = config['chrom_info']
+        chrom = config['chrom_info'],
+        bam2h5_script = rules.get_WASP.output.bam2h5_script
     params:
         sample_name = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample]
     output:
@@ -135,7 +164,7 @@ rule get_as_counts:
         "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "../envs/default.yaml"
     shell:
-        "python {config[wasp_dir]}/CHT/bam2h5.py "
+        "python {input.bam2h5_script} "
         "  --chrom {input.chrom} "
         "  --snp_index {input.snp_index} "
         "  --snp_tab {input.snp_tab} "

@@ -53,6 +53,34 @@ if not hasattr(rules, 'all'):
             expand(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
                    sample=config['SAMP_NAMES'])
 
+rule get_WASP:
+    """Download WASP if doesn't exist"""
+    output:
+        find_intersecting_snps_script = config['wasp_dir'] + "/mapping/find_intersecting_snps.py",
+        filter_remapped_reads_script = config['wasp_dir'] + "/mapping/filter_remapped_reads.py",
+        rmdup_script = config['wasp_dir'] + "/mapping/rmdup_pe.py",
+        bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
+        makefile = config['wasp_dir'] + "/snp2h5/Makefile"
+    conda: "../envs/default.yaml"
+    shell:
+        "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
+        "tar zxf - -C {config[wasp_dir]} --strip-components 1"
+
+rule install_WASP:
+    """Make WASP if it hasn't been compiled yet"""
+    input:
+        rules.get_WASP.output.makefile
+    output:
+        snp2h5_script = config['wasp_dir'] + "/snp2h5/snp2h5"
+    conda: "../envs/default.yaml"
+    shell:
+        "conda_path=\"$CONDA_PREFIX\" && "
+        "if [ -z $conda_path ]; then "
+        "conda_path=\"$(dirname $(dirname $(which conda)))\"; "
+        "fi && [ ! -z $conda_path ] && "
+        "(cd \"{config[wasp_dir]}/snp2h5\" && "
+        "make -s HDF_INSTALL=\"$conda_path\")"
+
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
@@ -69,14 +97,15 @@ rule vcf2h5:
     """Convert VCF data files to HDF5 format"""
     input:
         chrom = config['chrom_info'],
-        vcfs = rules.split_vcf_by_chr.output
+        vcfs = rules.split_vcf_by_chr.output,
+        snp2h5_script = rules.install_WASP.output.snp2h5_script
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     conda: "../envs/default.yaml"
     shell:
-        "{config[wasp_dir]}/snp2h5/snp2h5 "
+        "{input.snp2h5_script} "
         "  --chrom {input.chrom} "
         "  --format vcf "
         "  --snp_index {output.snp_index} "
@@ -125,7 +154,8 @@ rule find_intersecting_snps_paired_end:
         bam = rules.sort_and_index_bam1.output.bam,
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
-        haplotype = rules.vcf2h5.output.haplotype
+        haplotype = rules.vcf2h5.output.haplotype,
+        find_intersecting_snps_script = rules.get_WASP.output.find_intersecting_snps_script
     params:
         sample_names = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample]
     output:
@@ -135,7 +165,7 @@ rule find_intersecting_snps_paired_end:
         remap_bam = config['output_dir'] + "/find_intersecting_snps/{sample}.to.remap.bam"
     conda: "../envs/default.yaml"
     shell:
-        "python {config[wasp_dir]}/mapping/find_intersecting_snps.py "
+        "python {input.find_intersecting_snps_script} "
         "    --is_paired_end "
         "    --is_sorted "
         "    --output_dir {config[output_dir]}/find_intersecting_snps "
@@ -184,12 +214,13 @@ rule filter_remapped_reads:
     """filter reads from second mapping step"""
     input:
         to_remap_bam = rules.find_intersecting_snps_paired_end.output.remap_bam,
-        remap_bam = rules.sort_and_index_bam2.output.bam
+        remap_bam = rules.sort_and_index_bam2.output.bam,
+        filter_remapped_reads_script = rules.get_WASP.output.filter_remapped_reads_script
     output:
         temp(config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam")
     conda: "../envs/default.yaml"
     shell:
-        "python {config[wasp_dir]}/mapping/filter_remapped_reads.py "
+        "python {input.filter_remapped_reads_script} "
         "  {input.to_remap_bam} {input.remap_bam} {output}"
 
 rule sort_filtered_bam:
@@ -207,13 +238,14 @@ rule sort_filtered_bam:
 rule rmdup_pe:
     """remove duplicate read pairs"""
     input:
-        rules.sort_filtered_bam.output
+        bam = rules.sort_filtered_bam.output,
+        rmdup_script = rules.get_WASP.output.rmdup_script
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "python {config[wasp_dir]}/mapping/rmdup_pe.py {input} {output.rmdup} && "
+        "python {input.rmdup_script} {input.bam} {output.rmdup} && "
         "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
         "samtools index -@ {threads} {output.sort}"

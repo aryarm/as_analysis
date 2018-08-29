@@ -26,7 +26,6 @@ if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(GLOBAL_SAMP.keys())
 
 
-# out_path="/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/out";
 
 rule all:
     input:
