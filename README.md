@@ -36,4 +36,4 @@ If you have [Anaconda](https://conda.io/docs/user-guide/install/index.html) inst
 - [rtracklayer](https://bioconductor.org/packages/release/bioc/html/rtracklayer.html)
 - [dplyr](https://www.rdocumentation.org/packages/dplyr)
 
-Note that our pipeline uses [WASP](https://www.biorxiv.org/content/early/2014/11/07/011221) (v3.x), which is not available from Anaconda. You must [manually install it](https://github.com/bmvdgeijn/WASP). The `--use-conda` option will automatically handle WASP's dependencies, but you can see the [WASP README](https://github.com/bmvdgeijn/WASP/blob/master/README.md) if you'd like to install these dependencies manually.
+Note that our pipeline uses [WASP](https://github.com/bmvdgeijn/WASP) (v3.x), which is not available from Anaconda. If the pipeline is unable to locate WASP, it will automatically install it. The `--use-conda` option will automatically handle WASP's dependencies, but you can see the [WASP README](https://github.com/bmvdgeijn/WASP/blob/master/README.md) if you'd like to install these dependencies manually.

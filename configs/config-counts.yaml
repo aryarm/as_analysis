@@ -25,6 +25,7 @@
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
 # Otherwise, specify the location of the directory in which you'd like it installed
+# When this option is not provided, the pipeline will install WASP in your .snakemake directory
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
 
 # Directory in which to output all of the generated files
@@ -36,6 +37,7 @@
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
+# When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # what are the maximum number of threads to use for each rule in the pipeline?

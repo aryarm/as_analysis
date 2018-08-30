@@ -49,6 +49,10 @@ if 'SAMP_TO_VCF_ID' not in globals():
         return samp_dict
     SAMP_TO_VCF_ID = read_vcf_samples()
 
+# set the wasp_dir if the user hasn't specified one
+if 'wasp_dir' not in config:
+    config['wasp_dir'] = ".snakemake/WASP"
+
 
 if not hasattr(rules, 'all'):
     rule all:
