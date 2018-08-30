@@ -10,7 +10,7 @@ dna = read.table(gzfile(args[1]), sep=" ", header=F, stringsAsFactors=F, col.nam
 # import rna counts for this sample
 rna = read.table(gzfile(args[2]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
 # import gq data for this sample
-gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"))
+gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"), stringsAsFactors=F)
 # import gene info from gencode
 genes= as(readGFF(args[4]), "GRanges")
 # what is the output directory prefix? note that it should have a trailing slash
@@ -30,6 +30,10 @@ gq$CHROM = NULL
 gq$POS = NULL
 gq$REF = NULL
 gq$ALT = NULL
+# remove any SNPs for which the genotype quality is unknown
+# and then convert it to a numeric type
+gq = gq[gq$GQ != ".",]
+gq$GQ = as.numeric(as.character(gq$GQ))
 # generate the genotype.error column
 gq$genotype.error = 10^{-(gq$GQ/10)}
 # retain only the cols that we need

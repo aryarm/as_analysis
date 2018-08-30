@@ -26,6 +26,10 @@ gq$CHROM = NULL
 gq$POS = NULL
 gq$REF = NULL
 gq$ALT = NULL
+# remove any SNPs for which the genotype quality is unknown
+# and then convert it to a numeric type
+gq = gq[gq$GQ != ".",]
+gq$GQ = as.numeric(as.character(gq$GQ))
 # generate the genotype.error column
 gq$genotype.error = 10^{-(gq$GQ/10)}
 # retain only the cols that we need
