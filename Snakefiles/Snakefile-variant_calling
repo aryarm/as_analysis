@@ -43,7 +43,7 @@ rule align_dna:
         fastq1 = lambda wildcards: SAMP1[wildcards.sample][0],
         fastq2 = lambda wildcards: SAMP1[wildcards.sample][1]
     output:
-        pipe(config['output_dir'] + "/dna_align/{sample}/aligned_dna.sam")
+        temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.sam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
@@ -63,7 +63,7 @@ rule sam_to_bam:
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools view -u -b -F 4 -q 20 -@ {threads} <{input} >{output}"
+        "samtools view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
 
 rule sort_bam_by_name:
     """Sort the bam output by name (not by coordinates yet)"""

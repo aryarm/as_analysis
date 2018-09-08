@@ -60,6 +60,7 @@
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
 # Otherwise, specify the location of the directory in which you'd like it installed
+# When this option is not provided, the pipeline will install WASP in your .snakemake directory
 "wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
 
 # directory in which to output all of the output files

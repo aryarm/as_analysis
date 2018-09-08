@@ -1,7 +1,6 @@
 suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
-suppressMessages(library(ape))
-suppressMessages(library(rtracklayer))
+suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
 
 args = commandArgs(trailingOnly = TRUE)

@@ -1,7 +1,6 @@
 suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
-suppressMessages(library(ape))
-suppressMessages(library(rtracklayer))
+suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
 
 args = commandArgs(trailingOnly = TRUE)
@@ -14,6 +13,8 @@ genes= as(readGFF(args[3]), "GRanges")
 # what is the output directory prefix? note that it should have a trailing slash
 output_dir = args[4]
 
+# switch ref and alt counts if genotype is 1|0
+rna = transform(rna, ref.matches = ifelse(genotype == "1|0", alt.matches, ref.matches), alt.matches = ifelse(genotype == "1|0", ref.matches, alt.matches))
 # create unique rsID column for later merging with gq
 rna$rsID = paste0(rna$chr, ":", rna$start, "_", rna$ref, "/", rna$alt)
 # remove genotype col, since all rows should be heterozygotes already

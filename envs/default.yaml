@@ -1,7 +1,7 @@
 channels:
   - bioconda
   - r
-  - mdekstrand
+  - hcc
   - conda-forge
   - nodefaults
 dependencies:
@@ -18,6 +18,7 @@ dependencies:
   - bwa
   - tabix
   - bcftools
+  - r
   - r-plyr
   - r-rmutil
   - bioconductor-rtracklayer

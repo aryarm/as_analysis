@@ -202,6 +202,7 @@ rule remove_indel_counts:
     output:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.snps.txt.gz"
+    conda: "../envs/default.yaml"
     shell:
         "Rscript --vanilla scripts/remove_indels.r {input} "
         "{params.sep} | gzip >{output}"
@@ -224,6 +225,7 @@ if config['rna_only']:
             output_dir = config['output_dir'] + "/final/{sample}/"
         output:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
+        conda: "../envs/default.yaml"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
@@ -238,6 +240,7 @@ if config['rna_only']:
             imbalance_script_path = "scripts/allele_imbalance-rna.r"
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
+        conda: "../envs/default.yaml"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance-rna.r {params.imbalance_script_path} "
@@ -266,6 +269,7 @@ else:
         output:
             dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
+        conda: "../envs/default.yaml"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
@@ -281,6 +285,7 @@ else:
             imbalance_script_path = "scripts/allele_imbalance.r"
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
+        conda: "../envs/default.yaml"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance.r {params.imbalance_script_path} "
