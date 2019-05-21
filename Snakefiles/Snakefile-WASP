@@ -110,12 +110,12 @@ rule vcf2h5:
     conda: "../envs/default.yaml"
     shell:
         "{input.snp2h5_script} "
-        "  --chrom {input.chrom} "
-        "  --format vcf "
-        "  --snp_index {output.snp_index} "
-        "  --snp_tab {output.snp_tab} "
-        "  --haplotype {output.haplotype} "
-        "  {input.vcfs}"
+            "--chrom {input.chrom} "
+            "--format vcf "
+            "--snp_index {output.snp_index} "
+            "--snp_tab {output.snp_tab} "
+            "--haplotype {output.haplotype} "
+            "{input.vcfs}"
 
 rule map_STAR_paired_end1:
     """map reads using STAR"""
@@ -150,7 +150,8 @@ rule sort_and_index_bam1:
     conda: "../envs/default.yaml"
     shell:
         "samtools sort -@ {threads} -o {output.bam} {input} && "
-        "samtools index -@ {threads} {output.bam}"
+        "samtools index -@ {threads} {output.bam} && "
+        "touch -c {output.bam}"
 
 rule find_intersecting_snps_paired_end:
     """find intersecting SNPs using WASP script"""
@@ -170,14 +171,14 @@ rule find_intersecting_snps_paired_end:
     conda: "../envs/default.yaml"
     shell:
         "python {input.find_intersecting_snps_script} "
-        "    --is_paired_end "
-        "    --is_sorted "
-        "    --output_dir {config[output_dir]}/find_intersecting_snps "
-        "    --snp_tab {input.snp_tab} "
-        "    --snp_index {input.snp_index} "
-        "    --haplotype {input.haplotype} "
-        "    --samples {params.sample_names} "
-        "    {input.bam}"
+            "--is_paired_end "
+            "--is_sorted "
+            "--output_dir {config[output_dir]}/find_intersecting_snps "
+            "--snp_tab {input.snp_tab} "
+            "--snp_index {input.snp_index} "
+            "--haplotype {input.haplotype} "
+            "--samples {params.sample_names} "
+            "{input.bam}"
 
 rule map_STAR_paired_end2:
     """map reads a second time using STAR"""
@@ -212,7 +213,8 @@ rule sort_and_index_bam2:
     conda: "../envs/default.yaml"
     shell:
         "samtools sort -@ {threads} -o {output.bam} {input} && "
-        "samtools index -@ {threads} {output.bam}"
+        "samtools index -@ {threads} {output.bam} && "
+        "touch -c {output.bam}"
 
 rule filter_remapped_reads:
     """filter reads from second mapping step"""
@@ -225,7 +227,7 @@ rule filter_remapped_reads:
     conda: "../envs/default.yaml"
     shell:
         "python {input.filter_remapped_reads_script} "
-        "  {input.to_remap_bam} {input.remap_bam} {output}"
+        "{input.to_remap_bam} {input.remap_bam} {output}"
 
 rule sort_filtered_bam:
     """sort 'keep' BAM file from rules.filter_remapped_reads for rules.rmdup_pe"""
@@ -252,4 +254,5 @@ rule rmdup_pe:
     shell:
         "python {input.rmdup_script} {input.bam} {output.rmdup} && "
         "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
-        "samtools index -@ {threads} {output.sort}"
+        "samtools index -@ {threads} {output.sort} && "
+        "touch -c {output.sort}"
