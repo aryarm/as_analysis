@@ -11,3 +11,6 @@ This R script prepares counts for use by `find_imbalance.r`, incorporating GQ sc
 
 ### remove_indels.r
 This R script extracts SNPs from a text file containing read counts. Its output is used by `prepare_counts.r`.
+
+### merge_results.py
+This python script can be used to merge the final results of the pipeline into a single csv file. It is provided for the convenience of the user and is not officially part of the counts pipeline.
