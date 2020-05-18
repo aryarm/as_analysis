@@ -14,7 +14,7 @@ If you'd like to run the counts pipeline on its own, you should provide required
  - If your VCF is not in the hdf5 format, you must provide a text file containing names and lengths of all chromosomes in the assembly. You can usually download these from the [UCSC genome browser](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/) or use [the example that comes with WASP](https://github.com/bmvdgeijn/WASP/blob/master/examples/example_data/chromInfo.hg19.txt).
  - If your VCF is not in the hdf5 format, your VCF must be converted to the HDF5 format before it can be used by WASP. You can optionally specify a directory to which you'd like these files written. Otherwise, the pipeline will default to `genotypes/snp_h5/`.
      
-     If your VCF _has_ been converted to the hdf5 format, you should specify the directory of your hdf5 files as the `snp_h5_dir`.
+     If your VCF _has_ been converted to the hdf5 format, you should specify the directory of your hdf5 files as the `snp_h5_dir`. The `geno_probs.h5` files are not required. Note: you will still need to provide a VCF file.
  - Gene annotation information in the GTF format. These can ususally be obtained from GENCODE. For example, annotations for hg19 can be downloaded from [here](https://www.gencodegenes.org/releases/19.html).
 
 ## Running the counts pipeline on its own
