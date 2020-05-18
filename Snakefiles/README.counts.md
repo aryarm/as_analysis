@@ -4,6 +4,8 @@ If you'd like to run the counts pipeline on its own, you should provide required
 
 ## Inputs
  - FASTQ files containing DNA and RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | dna_bam_path | rna_bam_path` where each row is a different sample.
+ 
+     If you don't have DNA sequencing reads, you can still run the pipeline using a more conservative version of our ASE test by setting the [`rna_only` config option](https://github.com/aryam7/as_analysis/blob/master/configs/config-counts.yaml#L16) to true.
      
      Sometimes, a VCF may contain unique identifiers for each sample that differ from the sample name. For this reason, we ask that you provide a `vcf_sample_id` column so the pipeline can map between the sample name and the VCF sample ID. If this is not your situation, you can simply duplicate the `unique_sample_name` column as the `vcf_sample_id`.
  - A VCF file containing SNPs at which you'd like to get counts. If you don't have this, you can generate it using the [variant calling pipeline](https://github.com/aryam7/as_analysis/blob/master/Snakefiles/README.variant_calling.md). The VCF can contain any type of variant, but if you are performing our allele specific analysis, it is much faster to provide a VCF containing only heterozygous SNPs, since all other variants will be ignored anyway.
