@@ -20,6 +20,8 @@ The pipeline is written as Snakefiles and so can be executed via [Snakemake](htt
 
 The entire pipeline is made up of three different sections. We provide a single [Snakefile](https://github.com/aryam7/as_analysis/blob/master/Snakefile) to execute all of them at once, but you can also execute each of these sections on their own. For each section that you'd like to run separately, you must fill out a new config file. You can find more information about these individual portions of the pipeline and how to execute them in the [Snakefiles directory](https://github.com/aryam7/as_analysis/tree/master/Snakefiles).
 
+Snakemake automatically detects files that it has already generated, so that it doesn't rerun steps it doesn't have to. You can take advantage of this to easily skip any of the steps of our pipeline. Just provide your files in place of the files that Snakemake would have generated. Make sure that you place them in the correct directories and name them appropriately.
+
 By default, the pipeline will automatically delete some files it deems unnecessary (ex: unsorted copies of a BAM). You can opt to keep these files instead by providing the `--notemp` flag to Snakemake when executing the pipeline.
 
 # dependencies
