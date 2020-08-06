@@ -1,8 +1,9 @@
 import glob
+from pathlib import Path
 from snakemake.utils import min_version
 
 ##### set minimum snakemake version #####
-min_version("5.1.4")
+min_version("5.18.0")
 
 
 # check existence of SAMP variable. it may have already been defined if this
@@ -56,66 +57,7 @@ if not hasattr(rules, 'all'):
             expand(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
                    sample=config['SAMP_NAMES'])
 
-rule get_WASP:
-    """Download WASP if doesn't exist"""
-    output:
-        find_intersecting_snps_script = config['wasp_dir'] + "/mapping/find_intersecting_snps.py",
-        filter_remapped_reads_script = config['wasp_dir'] + "/mapping/filter_remapped_reads.py",
-        rmdup_script = config['wasp_dir'] + "/mapping/rmdup_pe.py",
-        bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
-        makefile = config['wasp_dir'] + "/snp2h5/Makefile"
-    conda: "../envs/default.yaml"
-    shell:
-        "[ ! -d \"{config[wasp_dir]}\"] && "
-        "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
-        "tar zxf - -C \"{config[wasp_dir]}\" --strip-components 1"
-
-rule install_WASP:
-    """Make WASP snp2h5 if it hasn't been compiled yet"""
-    input:
-        rules.get_WASP.output.makefile
-    output:
-        snp2h5_script = config['wasp_dir'] + "/snp2h5/snp2h5"
-    conda: "../envs/default.yaml"
-    shell:
-        "conda_path=\"$CONDA_PREFIX\" && "
-        "if [ -z $conda_path ]; then "
-        "conda_path=\"$(dirname $(dirname $(which conda)))\"; "
-        "fi && [ ! -z $conda_path ] && "
-        "(cd \"{config[wasp_dir]}/snp2h5\" && "
-        "make -s HDF_INSTALL=\"$conda_path\")"
-
-rule split_vcf_by_chr:
-    """Split the provided VCF file by chromosome and gzip it for WASP"""
-    input:
-        vcf = config['vcf_file'],
-        vcf_index = config['vcf_file'] + ".tbi"
-    output:
-        dynamic(config['output_dir'] + "/genotypes/ALL.{chr_num}.vcf.gz")
-    conda: "../envs/default.yaml"
-    shell:
-        "SnpSift split {input.vcf} && "
-        "gzip {config[output_dir]}/genotypes/*.vcf"
-
-rule vcf2h5:
-    """Convert VCF data files to HDF5 format"""
-    input:
-        chrom = config['chrom_info'],
-        vcfs = rules.split_vcf_by_chr.output,
-        snp2h5_script = rules.install_WASP.output.snp2h5_script
-    output:
-        snp_index = config['snp_h5_dir'] + "/snp_index.h5",
-        snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-    conda: "../envs/default.yaml"
-    shell:
-        "{input.snp2h5_script} "
-            "--chrom {input.chrom} "
-            "--format vcf "
-            "--snp_index {output.snp_index} "
-            "--snp_tab {output.snp_tab} "
-            "--haplotype {output.haplotype} "
-            "{input.vcfs}"
+include: "snp2h5_rules.smk"
 
 rule map_STAR_paired_end1:
     """map reads using STAR"""
@@ -126,7 +68,7 @@ rule map_STAR_paired_end1:
     params:
         prefix = config['output_dir'] + "/map1/{sample}/"
     output:
-        temp(config['output_dir'] + "/map1/{sample}/Aligned.out.bam")
+        temp(str(Path(config['output_dir']).absolute()) + "/map1/{sample}/Aligned.out.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shadow: "minimal"
@@ -189,7 +131,7 @@ rule map_STAR_paired_end2:
     params:
         prefix = config['output_dir'] + "/map2/{sample}/"
     output:
-        temp(config['output_dir'] + "/map2/{sample}/Aligned.out.bam")
+        temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
     threads: config['num_threads']
     conda: "../envs/default.yaml"
     shadow: "minimal"

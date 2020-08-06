@@ -2,7 +2,7 @@ import glob
 from snakemake.utils import min_version
 
 ##### set minimum snakemake version #####
-min_version("5.1.4")
+min_version("5.18.0")
 
 
 # check existence of SAMP variable. it may have already been defined if this
@@ -74,65 +74,8 @@ rule extract_gq_scores:
         "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%GQ]\n' "
         "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
 
-if not hasattr(rules, 'get_WASP'):
-    rule get_WASP:
-        """Download WASP if doesn't exist"""
-        output:
-            bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
-            makefile = config['wasp_dir'] + "/snp2h5/Makefile"
-        conda: "../envs/default.yaml"
-        shell:
-            "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
-            "tar zxf - -C {config[wasp_dir]} --strip-components 1"
-
-if not hasattr(rules, 'install_WASP'):
-    rule install_WASP:
-        """Make WASP if it hasn't been compiled yet"""
-        input:
-            rules.get_WASP.output.makefile
-        output:
-            snp2h5_script = config['wasp_dir'] + "/snp2h5/snp2h5"
-        conda: "../envs/default.yaml"
-        shell:
-            "conda_path=\"$CONDA_PREFIX\" && "
-            "if [ -z $conda_path ]; then "
-            "conda_path=\"$(dirname $(dirname $(which conda)))\"; "
-            "fi && [ ! -z $conda_path ] && "
-            "(cd \"{config[wasp_dir]}/snp2h5\" && "
-            "make -s HDF_INSTALL=\"$conda_path\")"
-
-if not hasattr(rules, 'split_vcf_by_chr'):
-    rule split_vcf_by_chr:
-        """Split the provided VCF file by chromosome and gzip it for WASP"""
-        input:
-            vcf = config['vcf_file']
-        output:
-            dynamic(config['output_dir'] + "/genotypes/ALL.chr{chr_num}.vcf.gz")
-        conda: "../envs/default.yaml"
-        shell:
-            "SnpSift split {input} && "
-            "gzip {config[output_dir]}/genotypes/*.vcf"
-
 if not hasattr(rules, 'vcf2h5'):
-    rule vcf2h5:
-        """Convert VCF data files to HDF5 format"""
-        input:
-            chrom = config['chrom_info'],
-            vcfs = rules.split_vcf_by_chr.output,
-            snp2h5_script = rules.install_WASP.output.snp2h5_script
-        output:
-            snp_index = config['snp_h5_dir'] + "/snp_index.h5",
-            snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-            haplotype = config['snp_h5_dir'] + "/haplotype.h5"
-        conda: "../envs/default.yaml"
-        shell:
-            "{input.snp2h5_script} "
-                "--chrom {input.chrom} "
-                "--format vcf "
-                "--snp_index {output.snp_index} "
-                "--snp_tab {output.snp_tab} "
-                "--haplotype {output.haplotype} "
-                "{input.vcfs}"
+    include: "snp2h5_rules.smk"
 
 rule get_as_counts:
     """get allele-specific read counts for SNPs"""
@@ -142,7 +85,7 @@ rule get_as_counts:
         ],
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotype.h5",
+        haplotype = config['snp_h5_dir'] + "/haplotypes.h5",
         chrom = config['chrom_info'],
         bam2h5_script = rules.get_WASP.output.bam2h5_script
     params:
