@@ -70,7 +70,6 @@ rule map_STAR_paired_end1:
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map1/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
-    shadow: "minimal"
     shell:
         "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
@@ -131,7 +130,6 @@ rule map_STAR_paired_end2:
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
-    shadow: "minimal"
     shell:
         "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
