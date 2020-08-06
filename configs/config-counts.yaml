@@ -39,6 +39,3 @@
 # Otherwise, they will be created in this location
 # When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
 "snp_h5_dir" : "out/genotypes/snp_h5"
-
-# what are the maximum number of threads to use for each rule in the pipeline?
-"num_threads" : 10

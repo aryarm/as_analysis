@@ -69,11 +69,10 @@ rule map_STAR_paired_end1:
         prefix = config['output_dir'] + "/map1/{sample}/"
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map1/{sample}/Aligned.out.bam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shadow: "minimal"
     shell:
-        "STAR --runThreadN {threads} "
+        "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
@@ -88,11 +87,10 @@ rule sort_and_index_bam1:
     output:
         bam = config['output_dir'] + "/map1_sort/{sample}.bam",
         index = config['output_dir'] + "/map1_sort/{sample}.bam.bai"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools sort -@ {threads} -o {output.bam} {input} && "
-        "samtools index -@ {threads} {output.bam} && "
+        "samtools sort -o {output.bam} {input} && "
+        "samtools index {output.bam} && "
         "touch -c {output.bam}"
 
 rule find_intersecting_snps_paired_end:
@@ -132,11 +130,10 @@ rule map_STAR_paired_end2:
         prefix = config['output_dir'] + "/map2/{sample}/"
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shadow: "minimal"
     shell:
-        "STAR --runThreadN {threads} "
+        "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
@@ -151,11 +148,10 @@ rule sort_and_index_bam2:
     output:
         bam = config['output_dir'] + "/map2_sort/{sample}.bam",
         index = config['output_dir'] + "/map2_sort/{sample}.bam.bai"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools sort -@ {threads} -o {output.bam} {input} && "
-        "samtools index -@ {threads} {output.bam} && "
+        "samtools sort -o {output.bam} {input} && "
+        "samtools index {output.bam} && "
         "touch -c {output.bam}"
 
 rule filter_remapped_reads:
@@ -177,11 +173,10 @@ rule sort_filtered_bam:
         rules.filter_remapped_reads.output
     output:
         config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools sort -@ {threads} -o {output} {input} && "
-        "samtools index -@ {threads} {output}"
+        "samtools sort -o {output} {input} && "
+        "samtools index {output}"
 
 rule rmdup_pe:
     """remove duplicate read pairs"""
@@ -191,10 +186,9 @@ rule rmdup_pe:
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
         "python {input.rmdup_script} {input.bam} {output.rmdup} && "
-        "samtools sort -@ {threads} -o {output.sort} {output.rmdup} && "
-        "samtools index -@ {threads} {output.sort} && "
+        "samtools sort -o {output.sort} {output.rmdup} && "
+        "samtools index {output.sort} && "
         "touch -c {output.sort}"

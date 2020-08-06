@@ -44,12 +44,11 @@ rule align_dna:
         fastq2 = lambda wildcards: SAMP1[wildcards.sample][1]
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.sam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
         "bwa mem -M "
         "-R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:ILLUMINA' "
-        "-t {threads} {input.ref} "
+        "-t 1 {input.ref} "
         "{input.fastq1} {input.fastq2} > {output}"
 
 rule sam_to_bam:
@@ -60,10 +59,9 @@ rule sam_to_bam:
         rules.align_dna.output
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.raw.bam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools view -u -b -F 4 -q 20 -@ {threads} {input} >{output}"
+        "samtools view -u -b -F 4 -q 20 {input} >{output}"
 
 rule sort_bam_by_name:
     """Sort the bam output by name (not by coordinates yet)"""
@@ -71,10 +69,9 @@ rule sort_bam_by_name:
         rules.sam_to_bam.output
     output:
         config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.bam"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools sort -n -@ {threads} {input} >{output}"
+        "samtools sort -n {input} >{output}"
 
 rule add_mate_info:
     """Use fixmate to fill in mate coordinates and mate related flags, since
@@ -84,10 +81,9 @@ rule add_mate_info:
         rules.sort_bam_by_name.output
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.bam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools fixmate -m -@ {threads} {input} {output}"
+        "samtools fixmate -m {input} {output}"
 
 rule sort_bam_by_coord:
     """Sort the bam output by coordinates. Needed for markdup use later on."""
@@ -95,10 +91,9 @@ rule sort_bam_by_coord:
         rules.add_mate_info.output
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.coordSort.bam")
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools sort -@ {threads} -o {output} {input}"
+        "samtools sort -o {output} {input}"
 
 rule rm_dups:
     """Remove duplicates that may have occurred from PCR and index the
@@ -108,11 +103,10 @@ rule rm_dups:
     output:
         final_bam = config['output_dir'] + "/dna_align/{sample}/aligned_dna.final.bam",
         final_bam_index = config['output_dir'] + "/dna_align/{sample}/aligned_dna.final.bam.bai"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
-        "samtools markdup -@ {threads} {input} {output.final_bam} && "
-        "samtools index -b -@ {threads} {output.final_bam}"
+        "samtools markdup {input} {output.final_bam} && "
+        "samtools index -b {output.final_bam}"
 
 rule base_recal:
     """Recalibrate the base quality scores. They might be biased"""
@@ -235,11 +229,10 @@ rule variant_hard_filter:
     output:
         vcf = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz",
         index = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz.tbi"
-    threads: config['num_threads']
     conda: "../envs/default.yaml"
     shell:
         "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output.vcf} "
-        "-nt {threads} -filter \"{params.filter_expr}\" "
+        "-filter \"{params.filter_expr}\" "
         "--filter-name \"{params.filter_name}\""
 
 rule filter_snps:

@@ -44,9 +44,6 @@
 # When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
 "snp_h5_dir" : "out/genotypes/snp_h5"
 
-# what are the maximum number of threads to use for the entire pipeline?
-"num_threads" : 10
-
 # For internal use.
 # This config option is required.
 "imported": true

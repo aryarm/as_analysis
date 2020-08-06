@@ -44,6 +44,3 @@
 
 # directory in which to output all of the output files
 "output_dir" : "out"
-
-# what are the maximum number of threads to use for the entire pipeline?
-"num_threads" : 10
