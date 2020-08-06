@@ -1,6 +1,6 @@
 # Variant Calling Pipeline
 
-If you'd like to run the variant calling pipeline on its own, you should provide required input in [configs/config-variant_calling.yaml](https://github.com/aryam7/as_analysis/blob/master/configs/config-variant_calling.yaml).
+If you'd like to run the variant calling pipeline on its own, you should provide required input in [configs/config-variant_calling.yaml](/configs/config-variant_calling.yaml).
 
 ## Inputs
  - FASTQ files containing DNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing three columns: `unique_sample_name | dna_fastq_path_1 | dna_fastq_path_2` where each row is a different sample.

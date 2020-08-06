@@ -3,7 +3,7 @@ Counts of reads that overlap heterozygous SNPs are analyzed in `Snakefile-counts
 For those who don't have counts from DNA sequencing reads, we've included "RNA-only" versions of these scripts which have `-rna` appended to their file names.
 
 ### allele_imbalance.r
-Defines a function for detecting allelic imbalance given count data. This code was adapted from [@Arkosen](https://github.com/Arkosen/Detecting-structural-variants-/blob/master/allele_imbalance.r)
+Defines a function for detecting allelic imbalance given count data. This code was adapted from [@Arkosen](https://github.com/Arkosen)
 
 ### find_imbalance.r
 An R script that calls `allele_imbalance.r`. This script is called, in turn, by Snakefile-counts.
