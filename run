@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#$ -t 1
+#$ -V
+#$ -j y
+#$ -cwd
+#$ -o /dev/null
+#$ -e /dev/null
+
+# An example bash script demonstrating how to run the entire snakemake pipeline
+# This script creates two separate log files:
+# 	1) log - the basic snakemake log of completed rules
+# 	2) qlog - a more detailed log of the progress of each rule and any errors
+
+# Before running this snakemake pipeline, remember to verify that the config
+# file has been appropriately completed with the required input info. In
+# particular, make sure that you have created a samples.tsv file specifying
+# paths to the fastq files for each of your samples.
+# Make sure that this script is executed from the directory that it lives in!
+
+out_path="out" # you can specify a dir for all output here (or in the config)
+mkdir -p "$out_path"
+
+# clear leftover log files
+if [ -f "$out_path/log" ]; then
+	echo ""> "$out_path/log";
+fi
+if [ -f "$out_path/qlog" ]; then
+	echo ""> "$out_path/qlog";
+fi
+
+# try to find and activate the snakemake conda env if we need it
+if ! command -v 'snakemake' &>/dev/null && \
+   command -v 'conda' &>/dev/null && \
+   [ "$CONDA_DEFAULT_ENV" != "snakemake" ] && \
+   conda info --envs | grep "$CONDA_ROOT/snakemake" &>/dev/null; then
+	echo "Snakemake not detected. Attempting to switch to snakemake environment." >> "$out_path/log"
+	eval "$(conda shell.bash hook)"
+	conda activate snakemake
+fi
+
+# check: are we being executed from within qsub?
+if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
+	snakemake \
+	--cluster "qsub -t 1 -V -j y -cwd -o $out_path/qlog" \
+	--config out="$out_path" \
+	--latency-wait 60 \
+	--use-conda \
+	-k \
+	-j 24 \
+	--restart-times 2 \
+	"$@" &>>"$out_path/log"
+else
+	snakemake \
+	--config out="$out_path" \
+	--latency-wait 60 \
+	--use-conda \
+	-k \
+	-j 24 \
+	"$@" 2>>"$out_path/log" >>"$out_path/qlog"
+fi
+
+# message the user on slack if possible
+exit_code="$?"
+if command -v 'slack' &>/dev/null; then
+	if [ "$exit_code" -eq 0 ]; then
+		slack "snakemake finished successfully" &>/dev/null
+	else
+		slack "$(tail -n4 "$out_path/log")" &>/dev/null
+	fi
+fi
+exit "$exit_code"
