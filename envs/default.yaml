@@ -12,7 +12,7 @@ dependencies:
   - pytables=3
   - gatk4=4.0.4
   - snpsift
-  - star
+  - star<2.7.0b
   - ncurses
   - samtools
   - bwa
