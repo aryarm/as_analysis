@@ -10,7 +10,7 @@
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-counts.tsv"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
-# For example, a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
+# For example, a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
 # If the <dna_bam_path> column is left out in the sample file, or if you set

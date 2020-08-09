@@ -46,7 +46,7 @@
 "dbSNP" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/dbsnp.vcf"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
-# For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/
+# For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
 # If you set the rna_only option below to true the pipeline will default to
@@ -55,6 +55,7 @@
 "rna_only" : true
 
 # Gene annotation information in the GTF format. These can usually be obtained from GENCODE
+# You should provide the same one that you used when creating the STAR index
 # For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
 "gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
 
