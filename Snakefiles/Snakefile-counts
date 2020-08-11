@@ -75,7 +75,7 @@ rule extract_gq_scores:
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/extract_gq/{vcf_sample}.tsv"
     shell:
-        "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%GQ]\n' "
+        "bcftools query -f '%CHROM\\t%POS\\t%REF\\t%ALT\\t[%GQ]\\n' "
         "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
 
 if not hasattr(rules, 'vcf2h5'):
