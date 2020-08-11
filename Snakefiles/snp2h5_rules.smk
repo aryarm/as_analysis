@@ -42,12 +42,18 @@ rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
         vcf = config['vcf_file'],
-        vcf_index = config['vcf_file'] + ".tbi"
+        vcf_index = config['vcf_file']+".tbi"
+    params:
+        vcf = lambda wildcards, output: output.genotypes+"/ALL.vcf.gz",
+        vcf_idx = lambda wildcards, output: output.genotypes+"/ALL.vcf.gz.tbi"
     output:
-        genotypes = directory(config['output_dir'] + "/genotypes")
+        genotypes = directory(config['output_dir'] + "/genotypes/bychrom")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/split_vcf_by_chr/all.tsv"
     shell:
+        "mkdir -p {output.genotypes} && "
+        "ln -sf {input.vcf} {params.vcf} && "
+        "ln -sf {input.vcf_index} {params.vcf_idx} && "
         "SnpSift split {input.vcf} && "
         "gzip {output.genotypes}/*.vcf"
 
