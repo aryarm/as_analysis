@@ -1,4 +1,5 @@
 import glob
+import warnings
 from pathlib import Path
 from snakemake.utils import min_version
 
@@ -23,10 +24,16 @@ if 'SAMP2' not in globals():
         return samp_dict
     SAMP2 = read_samples()
 
-# the user can change config['SAMP_NAMES'] here (or define it in the config
-# file) to contain whichever sample names they'd like to run the pipeline on
+# the user can define config['SAMP_NAMES'] to contain whichever sample names
+# they'd like to run the pipeline on
 if 'SAMP_NAMES' not in config:
     config['SAMP_NAMES'] = list(SAMP2.keys())
+else:
+    # double check that the user isn't asking for samples they haven't provided
+    user_samps_len = len(config['SAMP_NAMES'])
+    config['SAMP_NAMES'] = list(set(SAMP2.keys()).intersection(config['SAMP_NAMES']))
+    if len(config['SAMP_NAMES']) != user_samps_len:
+        warnings.warn("Not all of the samples requested have provided input. Proceeding with as many samples as is possible...")
 
 # check existence of SAMP_TO_VCF_ID. it may have already been defined if this
 # Snakefile is being included from somewhere else

@@ -1,4 +1,4 @@
-import pandas as pd
+import warnings
 from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("5.18.0")
@@ -43,10 +43,16 @@ def read_samples():
     return samp_dict
 GLOBAL_SAMP = read_samples()
 
-# the user can change config['SAMP_NAMES'] here (or define it in the config
-# file) to contain whichever sample names they'd like to run the pipeline on
+# the user can define config['SAMP_NAMES'] to contain whichever sample names
+# they'd like to run the pipeline on
 if not check_config('SAMP_NAMES'):
     config['SAMP_NAMES'] = list(GLOBAL_SAMP.keys())
+else:
+    # double check that the user isn't asking for samples they haven't provided
+    user_samps_len = len(config['SAMP_NAMES'])
+    config['SAMP_NAMES'] = list(set(GLOBAL_SAMP.keys()).intersection(config['SAMP_NAMES']))
+    if len(config['SAMP_NAMES']) != user_samps_len:
+        warnings.warn("Not all of the samples requested have provided input. Proceeding with as many samples as is possible...")
 
 
 
