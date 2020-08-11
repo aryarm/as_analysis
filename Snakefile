@@ -93,7 +93,7 @@ for samp in config['SAMP_NAMES']:
             config['rna_only'] = True
     else:
         dna = rules.rm_dups.output.final_bam.format(sample=samp)
-    rna = rules.rmdup_pe.output.sort.format(sample=samp)
+    rna = rules.rmdup.output.sort.format(sample=samp)
     if config['rna_only']:
         SAMP3[samp] = (rna,)
     else:
