@@ -45,6 +45,7 @@ rule align_dna:
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.sam")
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/align_dna/{sample}.tsv"
     shell:
         "bwa mem -M "
         "-R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:ILLUMINA' "
@@ -60,6 +61,7 @@ rule sam_to_bam:
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.raw.bam")
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/sam_to_bam/{sample}.tsv"
     shell:
         "samtools view -u -b -F 4 -q 20 {input} >{output}"
 
@@ -70,6 +72,7 @@ rule sort_bam_by_name:
     output:
         config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.bam"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/sort_bam_by_name/{sample}.tsv"
     shell:
         "samtools sort -n {input} >{output}"
 
@@ -82,6 +85,7 @@ rule add_mate_info:
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.bam")
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/add_mate_info/{sample}.tsv"
     shell:
         "samtools fixmate -m {input} {output}"
 
@@ -92,6 +96,7 @@ rule sort_bam_by_coord:
     output:
         temp(config['output_dir'] + "/dna_align/{sample}/aligned_dna.nameSort.mate.coordSort.bam")
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/sort_bam_by_coord/{sample}.tsv"
     shell:
         "samtools sort -o {output} {input}"
 
@@ -104,6 +109,7 @@ rule rm_dups:
         final_bam = config['output_dir'] + "/dna_align/{sample}/aligned_dna.final.bam",
         final_bam_index = config['output_dir'] + "/dna_align/{sample}/aligned_dna.final.bam.bai"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/rm_dups/{sample}.tsv"
     shell:
         "samtools markdup {input} {output.final_bam} && "
         "samtools index -b {output.final_bam}"
@@ -117,6 +123,7 @@ rule base_recal:
     output:
         config['output_dir'] + "/base_recal/{sample}.recal_data.table"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/base_recal/{sample}.tsv"
     shell:
         "gatk BaseRecalibrator -R {input.ref} -I {input.bam} -known-sites {input.known_sites} -O {output}"
 
@@ -130,6 +137,7 @@ rule apply_base_recal:
         bam = config['output_dir'] + "/base_recal/{sample}.recal.final.bam",
         index = config['output_dir'] + "/base_recal/{sample}.recal.final.bai"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/apply_base_recal/{sample}.tsv"
     shell:
         "gatk ApplyBQSR -R {input.ref} -I {input.bam} --bqsr-recal-file {input.recal_table} -O {output.bam}"
 
@@ -142,6 +150,7 @@ rule haplotype:
         vcf = config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz",
         index = config['output_dir'] + "/haplotype/{sample}.snps.g.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/haplotype/{sample}.tsv"
     shell:
         "gatk HaplotypeCaller "
         "-R {input.ref} -I {input.bam} -O {output.vcf} -ERC GVCF "
@@ -160,6 +169,7 @@ rule combine:
         vcf = config['output_dir'] + "/haplotype/ALL.g.vcf.gz",
         index = config['output_dir'] + "/haplotype/ALL.g.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/combine/all.tsv"
     shell:
         "gatk CombineGVCFs -R {input.ref} -O {output.vcf} "
         "-G StandardAnnotation -G AS_StandardAnnotation {params.vcfs}"
@@ -173,6 +183,7 @@ rule genotype:
         vcf = config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz",
         index = config['output_dir'] + "/haplotype/ALL.genotype.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/genotype/all.tsv"
     shell:
         "gatk GenotypeGVCFs -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "-G StandardAnnotation -G AS_StandardAnnotation "
@@ -191,6 +202,7 @@ rule variant_filter:
         recal_idx = config['output_dir'] + "/variant_filter/ALL.recal.idx",
         tranches = config['output_dir'] + "/variant_filter/ALL.tranches"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/variant_filter/all.tsv"
     shell:
         "gatk VariantRecalibrator -R {input.ref} -V {input.vcf} "
         "--resource hapmap,known=false,training=true,truth=true,prior=15.0:{input.hapmap} "
@@ -211,6 +223,7 @@ rule apply_variant_filter:
         vcf = config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz",
         index = config['output_dir'] + "/variant_filter/ALL.filter.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/apply_variant_filter/all.tsv"
     shell:
         "gatk ApplyVQSR -R {input.ref} -V {input.vcf} -mode SNP "
         "--ts-filter-level {config[target_sensitivity]} "
@@ -230,6 +243,7 @@ rule variant_hard_filter:
         vcf = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz",
         index = config['output_dir'] + "/variant_filter/ALL.hard_filter.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/variant_hard_filter/all.tsv"
     shell:
         "gatk VariantFiltration -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "-filter \"{params.filter_expr}\" "
@@ -244,6 +258,7 @@ rule filter_snps:
         vcf = config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz",
         index = config['output_dir'] + "/variant_filter/ALL.filter.snps.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/filter_snps/all.tsv"
     shell:
         "gatk SelectVariants -R {input.ref} -V {input.vcf} -O {output.vcf} "
         "--select-type-to-include SNP"
@@ -256,6 +271,7 @@ rule filter_hets:
         vcf = config['output_dir'] + "/genotypes/ALL.vcf.gz",
         index = config['output_dir'] + "/genotypes/ALL.vcf.gz.tbi"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/variant_calling/filter_hets/all.tsv"
     shell:
         "zcat {input} | "
         "SnpSift filter \"(countHet() > 0) && (FILTER == 'PASS')\" | "

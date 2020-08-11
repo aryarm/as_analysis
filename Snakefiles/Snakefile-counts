@@ -49,10 +49,6 @@ if 'SAMP_TO_VCF_ID' not in globals():
         return samp_dict
     SAMP_TO_VCF_ID = read_vcf_samples()
 
-# set the wasp_dir if the user hasn't specified one
-if 'wasp_dir' not in config:
-    config['wasp_dir'] = ".snakemake/WASP"
-
 
 if not hasattr(rules, 'all'):
     rule all:
@@ -70,6 +66,7 @@ rule extract_gq_scores:
     output:
         config['output_dir'] + "/extract_gq/{vcf_sample}.tsv.gz"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/counts/extract_gq/{vcf_sample}.tsv"
     shell:
         "bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t[%GQ]\n' "
         "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
@@ -110,6 +107,7 @@ rule get_as_counts:
         txt_counts = config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/counts/as_counts/{sample}/{type}.tsv"
     shell:
         "python {input.bam2h5_script} "
             "--chrom {input.chrom} "
@@ -132,6 +130,7 @@ rule extract_hets:
     output:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
+    benchmark: config['output_dir'] + "/benchmark/counts/extract_hets/{sample}/{type}.tsv"
     shell:
         "zcat {input} | grep -E ' 0\|1 | 1\|0 ' | gzip >{output}"
 
@@ -146,6 +145,7 @@ rule remove_indel_counts:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.snps.txt.gz"
     conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/counts/remove_indel_counts/{sample}/{type}.tsv"
     shell:
         "Rscript --vanilla scripts/remove_indels.r {input} "
         "{params.sep} | gzip >{output}"
@@ -169,6 +169,7 @@ if config['rna_only']:
         output:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
+        benchmark: config['output_dir'] + "/benchmark/counts/prepare_counts/{sample}.tsv"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
@@ -184,6 +185,7 @@ if config['rna_only']:
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         conda: "../envs/default.yaml"
+        benchmark: config['output_dir'] + "/benchmark/counts/detect_imbalance/{sample}.tsv"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance-rna.r {params.imbalance_script_path} "
@@ -213,6 +215,7 @@ else:
             dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
+        benchmark: config['output_dir'] + "/benchmark/counts/prepare_counts/{sample}.tsv"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
@@ -229,6 +232,7 @@ else:
         output:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         conda: "../envs/default.yaml"
+        benchmark: config['output_dir'] + "/benchmark/counts/detect_imbalance/{sample}.tsv"
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance.r {params.imbalance_script_path} "
