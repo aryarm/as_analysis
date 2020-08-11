@@ -41,13 +41,6 @@ if 'SAMP_TO_VCF_ID' not in globals():
         return samp_dict
     SAMP_TO_VCF_ID = read_vcf_samples()
 
-# set the wasp_dir if the user hasn't specified one
-if 'wasp_dir' not in config:
-    config['wasp_dir'] = ".snakemake/WASP"
-# set the default SNP H5 dir if the user hasn't specified one
-if 'snp_h5_dir' not in config:
-    config['snp_h5_dir'] = "/genotypes/snp_h5"
-
 
 if not hasattr(rules, 'all'):
     rule all:

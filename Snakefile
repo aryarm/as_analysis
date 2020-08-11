@@ -81,8 +81,6 @@ if no_variant_calling:
 else:
     SAMP2 = {samp: GLOBAL_SAMP[samp][1] for samp in config['SAMP_NAMES']}
     SAMP_TO_VCF_ID = {samp: samp for samp, fastqs in GLOBAL_SAMP.items()}
-if not check_config('snp_h5_dir'):
-    config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 include: "Snakefiles/Snakefile-WASP"
 
 # counts analysis pipeline

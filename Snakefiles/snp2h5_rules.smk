@@ -1,5 +1,12 @@
 """ rules that are common to both the counts and WASP pipeline """
 
+# set the wasp_dir if the user hasn't specified one
+if 'wasp_dir' not in config:
+    config['wasp_dir'] = ".snakemake/WASP"
+# set the default SNP H5 dir if the user hasn't specified one
+if 'snp_h5_dir' not in config:
+    config['snp_h5_dir'] = config['output_dir'] + "/snp_h5"
+
 rule get_WASP:
     """Download WASP if doesn't exist"""
     output:

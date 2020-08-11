@@ -12,7 +12,7 @@ If you'd like to run the counts pipeline on its own, you should provide required
 
 ## Other Inputs and Options
  - If your VCF is not in the hdf5 format, you must provide a text file containing names and lengths of all chromosomes in the assembly. You can usually download these from the [UCSC genome browser](http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/) or use [the example that comes with WASP](https://github.com/bmvdgeijn/WASP/blob/master/examples/example_data/chromInfo.hg19.txt).
- - If your VCF is not in the hdf5 format, your VCF must be converted to the HDF5 format before it can be used by WASP. You can optionally specify a directory to which you'd like these files written. Otherwise, the pipeline will default to `genotypes/snp_h5/`.
+ - If your VCF is not in the hdf5 format, your VCF must be converted to the HDF5 format before it can be used by WASP. You can optionally specify a directory to which you'd like these files written. Otherwise, the pipeline will default to `snp_h5/`.
      
      If your VCF _has_ been converted to the hdf5 format, you should specify the directory of your hdf5 files as the `snp_h5_dir`. The `geno_probs.h5` files are not required. Note: you will still need to provide a VCF file.
  - Gene annotation information in the GTF format. These can ususally be obtained from GENCODE. For example, annotations for hg19 can be downloaded from [here](https://www.gencodegenes.org/releases/19.html).
@@ -29,7 +29,7 @@ When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_start
 ## Output
 The counts pipeline creates the following directories under the output directory specified in your config file. The `final` folder will contain the final output, a list of the resulting genes with allelic imbalance and their confidence.
  - genotypes - your input VCF, split by chromosome (if your VCF isn't already in the HDF5 format)
- - genotypes/snp_h5 - your input VCF in HDF5 format (if your VCF isn't already in the HDF5 format)
+ - snp_h5 - your input VCF in HDF5 format (if your VCF isn't already in the HDF5 format)
  - extract_gq - tables containing GQ scores for each of the samples in the input VCF
  - as_counts - allele-specific dna and rna read counts for all SNPs in the VCF
  - final - prepared counts and results of running the [allele_imbalance script](/scripts/allele_imbalance.r): genes with allelic imbalance and their FDR corrected p-value
