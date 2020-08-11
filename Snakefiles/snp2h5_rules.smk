@@ -5,7 +5,7 @@ if 'wasp_dir' not in config:
     config['wasp_dir'] = ".snakemake/WASP"
 # set the default SNP H5 dir if the user hasn't specified one
 if 'snp_h5_dir' not in config:
-    config['snp_h5_dir'] = config['output_dir'] + "/snp_h5"
+    config['snp_h5_dir'] = config['output_dir'] + "/genotypes/snp_h5"
 
 rule get_WASP:
     """Download WASP if doesn't exist"""
@@ -38,30 +38,42 @@ rule install_WASP:
         "(cd \"{config[wasp_dir]}/snp2h5\" && "
         "make -s HDF_INSTALL=\"$conda_path\")"
 
+checkpoint vcf_chroms:
+    """get the chroms from a VCF"""
+    input:
+        vcf = config['vcf_file'],
+        vcf_index = config['vcf_file']+".tbi"
+    output:
+        config['output_dir']+"/genotypes/chroms.txt"
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/snp2h5/vcf_chroms/all.tsv"
+    shell:
+        "tabix --list-chroms {input.vcf} > {output}"
+
 rule split_vcf_by_chr:
     """Split the provided VCF file by chromosome and gzip it for WASP"""
     input:
         vcf = config['vcf_file'],
-        vcf_index = config['vcf_file']+".tbi"
-    params:
-        vcf = lambda wildcards, output: output.genotypes+"/ALL.vcf.gz",
-        vcf_idx = lambda wildcards, output: output.genotypes+"/ALL.vcf.gz.tbi"
+        vcf_index = config['vcf_file']+".tbi",
     output:
-        genotypes = directory(config['output_dir'] + "/genotypes/bychrom")
+        config['output_dir'] + "/genotypes/bychrom/ALL.{chr}.vcf.gz"
     conda: "../envs/default.yaml"
-    benchmark: config['output_dir'] + "/benchmark/snp2h5/split_vcf_by_chr/all.tsv"
+    benchmark: config['output_dir'] + "/benchmark/snp2h5/split_vcf_by_chr/{chr}.tsv"
     shell:
-        "mkdir -p {output.genotypes} && "
-        "ln -sf {input.vcf} {params.vcf} && "
-        "ln -sf {input.vcf_index} {params.vcf_idx} && "
-        "SnpSift split {input.vcf} && "
-        "gzip {output.genotypes}/*.vcf"
+        "tabix -h {input.vcf} {wildcards.chr} | bgzip > {output}"
+
+def get_split_vcf(wildcards):
+    with checkpoints.vcf_chroms.get().output[0].open() as f:
+        return expand(
+            rules.split_vcf_by_chr.output,
+            chr=filter(lambda x: len(x), f.read().split('\n'))
+        )
 
 rule vcf2h5:
     """Convert VCF data files to HDF5 format"""
     input:
         chrom = config['chrom_info'],
-        vcfs = rules.split_vcf_by_chr.output.genotypes,
+        vcfs = get_split_vcf,
         snp2h5_script = ancient(rules.install_WASP.output.snp2h5_script)
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
@@ -76,4 +88,4 @@ rule vcf2h5:
             "--snp_index {output.snp_index} "
             "--snp_tab {output.snp_tab} "
             "--haplotype {output.haplotype} "
-            "{input.vcfs}/ALL.chr*.vcf.gz"
+            "{input.vcfs}"

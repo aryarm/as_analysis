@@ -17,6 +17,7 @@
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
+# Make sure that the presence/absence of a chr prefix in this file matches what you have in your VCF!
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
 # If the <dna_bam_path> column is left out in the sample file, or if you set
@@ -39,13 +40,15 @@
 # defined relative to whatever directory you execute the snakemake command in
 "output_dir" : "out"
 
-# A VCF file with which to run WASP. This comes from the variant_calling pipeline
+# A VCF file with which to run WASP. This can come from the variant calling pipeline
+# The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
+# It must also contain genotype quality (GQ) information
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
-# When this option is not provided, the pipeline will use {output_dir}/snp_h5
-"snp_h5_dir" : "out/snp_h5"
+# When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
+"snp_h5_dir" : "out/genotypes/snp_h5"
 
 # For internal use.
 # This config option is required.

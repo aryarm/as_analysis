@@ -37,5 +37,5 @@
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
-# When this option is not provided, the pipeline will use {output_dir}/snp_h5
-"snp_h5_dir" : "out/snp_h5"
+# When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
+"snp_h5_dir" : "out/genotypes/snp_h5"
