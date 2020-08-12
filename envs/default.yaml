@@ -1,25 +1,21 @@
 channels:
-  - bioconda
-  - r
-  - hcc
-  - conda-forge
   - nodefaults
 dependencies:
-  - numpy
-  - scipy
-  - pysam>=0.8.4
-  - hdf5>=1.8
-  - pytables=3
-  - gatk4=4.0.4
-  - snpsift
-  - star
-  - ncurses
-  - samtools
-  - bwa
-  - tabix
-  - bcftools
-  - r
-  - r-plyr
-  - r-rmutil
-  - bioconductor-rtracklayer
-  - r-dplyr
+  - conda-forge::numpy>=1.19.1
+  - conda-forge::scipy>=1.5.2
+  - bioconda::pysam>=0.16.0.1
+  - conda-forge::hdf5>=1.10.6
+  - conda-forge::pytables>=3.6.1
+  - bioconda::gatk4=4.0.4
+  - bioconda::star>=2.7.5b
+  - conda-forge::ncurses>=6.1
+  - bioconda::samtools>=1.10
+  - bioconda::bwa>=0.7.17
+  - bioconda::tabix>=0.2.6
+  - bioconda::bcftools>=1.10.2
+  - conda-forge::r>=4.0
+  - conda-forge::r-plyr>=1.8.6
+  - conda-forge::r-rmutil>=1.1.5
+  - bioconda::bioconductor-rtracklayer>=1.48.0
+  - conda-forge::r-dplyr>=1.0.1
+  - conda-forge::coreutils>=8.31
