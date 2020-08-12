@@ -78,7 +78,7 @@ rule vcf2h5:
     output:
         snp_index = config['snp_h5_dir'] + "/snp_index.h5",
         snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotypes.h5"
+        haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/vcf2h5/all.tsv"
     shell:

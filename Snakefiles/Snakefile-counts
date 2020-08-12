@@ -87,9 +87,9 @@ rule get_as_counts:
         bam = lambda wildcards: SAMP3[wildcards.sample][
             wildcards.type == "rna" and not config['rna_only']
         ],
-        snp_index = config['snp_h5_dir'] + "/snp_index.h5",
-        snp_tab = config['snp_h5_dir'] + "/snp_tab.h5",
-        haplotype = config['snp_h5_dir'] + "/haplotypes.h5",
+        snp_index = rules.vcf2h5.output.snp_index,
+        snp_tab = rules.vcf2h5.output.snp_tab,
+        haplotype = rules.vcf2h5.output.haplotype,
         chrom = config['chrom_info'],
         bam2h5_script = rules.get_WASP.output.bam2h5_script
     params:
@@ -137,6 +137,7 @@ rule extract_hets:
     output:
         config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
+    conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/extract_hets/{sample}/{type}.tsv"
     shell:
         "zcat {input} | grep -E ' 0\|1 | 1\|0 ' | gzip >{output}"
