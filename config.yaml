@@ -12,10 +12,11 @@
 # The path to a reference genome for DNA-seq alignment
 "ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
 
-# the path to an indexed reference genome for BWA
+# The path to an indexed reference genome for BWA
 "ref_genome_bwa" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
 
-# the path to an indexed reference genome for STAR
+# The path to a STAR index directory for ref_genome
+# If this is not provided, it will be craeted on the fly
 "ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"
 
 # Whether to perform GATK's base and variant score recalibration.

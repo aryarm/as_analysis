@@ -12,7 +12,13 @@
 # conservative version of the ASE test (see the 'rna_only' config below)
 "sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-WASP.tsv"
 
-# the path to an indexed reference genome for STAR
+# The path to a reference genome
+# This is not required if "ref_genome_star" is provided below
+"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
+
+# The path to a STAR index directory for "ref_genome"
+# If "ref_genome" is provided but not this, the pipeline will create the index
+# on the fly
 "ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.

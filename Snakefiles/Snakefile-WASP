@@ -59,12 +59,29 @@ if not hasattr(rules, 'all'):
 
 include: "snp2h5_rules.smk"
 
+rule create_STAR_index:
+    """create an index of the reference genome using STAR"""
+    input:
+        ref = config['ref_genome'],
+        genes = config['gene_info']
+    params:
+        overhang = config['sjdbOverhang'] if 'sjdbOverhang' in config and \
+            config['sjdbOverhang'] else 100
+    output: directory(config['output_dir'] + "/ref_genome/star_index")
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/WASP/create_STAR_index/all.tsv"
+    shell:
+        "STAR --genomeDir {output} --runThreadN 1 "
+        "--sjdbOverhang {params.overhang} --runMode genomeGenerate "
+        "--genomeFastaFiles {input.ref} --sjdbGTFfile {input.genes}"
+
 rule map_STAR1:
     """map reads using STAR"""
     input:
         fastq1 = lambda wildcards: SAMP2[wildcards.sample][0],
         fastq2 = lambda wildcards: SAMP2[wildcards.sample][1],
-        index = config['ref_genome_star']
+        index = config['ref_genome_star'] if 'ref_genome_star' in config and \
+            config['ref_genome_star'] else rules.create_STAR_index.output
     params:
         prefix = config['output_dir'] + "/map1/{sample}/"
     output:
@@ -127,7 +144,8 @@ rule map_STAR2:
     input:
         fastq1 = rules.find_intersecting_snps.output.fastq1,
         fastq2 = rules.find_intersecting_snps.output.fastq2,
-        index = config['ref_genome_star']
+        index = config['ref_genome_star'] if 'ref_genome_star' in config and \
+            config['ref_genome_star'] else rules.create_STAR_index.output
     params:
         prefix = config['output_dir'] + "/map2/{sample}/"
     output:
