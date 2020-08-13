@@ -62,7 +62,7 @@ include: "snp2h5_rules.smk"
 rule create_STAR_index:
     """create an index of the reference genome using STAR"""
     input:
-        ref = config['ref_genome'],
+        ref = lambda wildcards: config['ref_genome'],
         genes = config['gene_info']
     params:
         overhang = config['sjdbOverhang'] if 'sjdbOverhang' in config and \

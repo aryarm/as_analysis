@@ -56,7 +56,7 @@ rule split_vcf_by_chr:
         vcf = config['vcf_file'],
         vcf_index = config['vcf_file']+".tbi",
     output:
-        config['output_dir'] + "/genotypes/bychrom/ALL.{chr}.vcf.gz"
+        temp(config['output_dir'] + "/genotypes/bychrom/ALL.{chr}.vcf.gz")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/split_vcf_by_chr/{chr}.tsv"
     shell:

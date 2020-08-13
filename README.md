@@ -35,7 +35,7 @@ Note that our pipeline uses [WASP](https://github.com/bmvdgeijn/WASP) (v3.x), wh
     ./run --sge-cluster &
     ```
 
-#### Executing the pipeline on your own data
+### Executing the pipeline on your own data
 You must modify [the config.yaml file](config.yaml) to specify paths to your data before you perform step 2 above. For more information about what is required in the config file, see the [READMEs for each portion of the pipeline](Snakefiles/README.md).
 
 ### Executing each portion of the pipeline separately

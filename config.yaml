@@ -16,7 +16,7 @@
 "ref_genome_bwa" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/BWAIndex/genome.fa"
 
 # The path to a STAR index directory for ref_genome
-# If this is not provided, it will be craeted on the fly
+# If this is not provided, it will be created on the fly
 "ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"
 
 # Whether to perform GATK's base and variant score recalibration.
@@ -55,9 +55,11 @@
 # ignored. This performs a more conservative test.
 "rna_only" : true
 
-# Gene annotation information in the GTF format. These can usually be obtained from GENCODE
-# You should provide the same one that you used when creating the STAR index
-# For example, a gencode.v19.genes.chr.gtf file for hg19 can be downloaded from https://www.gencodegenes.org/releases/19.html
+# Gene annotation information in the GTF format.
+# These can usually be obtained from GENCODE (https://www.gencodegenes.org/human/)
+# under the "PRI" regions label
+# If you provided a STAR index directory in 'ref_genome_star' above, you should
+# provide the same gtf that you used to create that index
 "gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
