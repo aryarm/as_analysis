@@ -5,7 +5,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-parser = argparse.ArgumentParser("Summarize the runtime and memory usage of the pipeline from the benchmark files")
+parser = argparse.ArgumentParser("Summarize the (approximate!) runtime and memory usage of the pipeline from the benchmark files")
 parser.add_argument(
     "-o", "--out", default=sys.stdout,
     help="the filename to save the statistics to; defaults to stdout"
@@ -48,8 +48,8 @@ def bench_pipeline(workflows):
         for workflow in workflows
     }, ignore_index=False)
 
-pipeline = bench_pipeline(pipeline)[['s', 'max_rss']]
+pipeline = bench_pipeline(pipeline)[['s', 'max_rss', 'io_out']]
 print(pipeline)
 
 print('\ntotals:')
-print(pd.Series({'time':pipeline['s'].sum(), 'memory':pipeline['max_rss'].max()}).T)
+print(pd.Series({'time':pipeline['s'].sum(), 'memory':pipeline['max_rss'].max(), 'disk':pipeline['io_out'].max()}).T)
