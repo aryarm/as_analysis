@@ -19,8 +19,11 @@ rule create_STAR_index:
     output: directory(config['output_dir'] + "/ref_genome/star_index")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/create_STAR_index/all.tsv"
+    threads: 12
+    resources:
+        mem_mb=2000
     shell:
-        "STAR --genomeDir {output} --runThreadN 1 "
+        "STAR --genomeDir {output} --runThreadN {threads} "
         "--sjdbOverhang {params.overhang} --runMode genomeGenerate "
         "--genomeFastaFiles {input.ref} --sjdbGTFfile {input.genes}"
 
@@ -37,6 +40,8 @@ rule map_STAR1:
         temp(str(Path(config['output_dir']).absolute()) + "/map1/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/map_STAR1/{sample}.tsv"
+    resources:
+        mem_mb = 30000
     shell:
         "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
@@ -55,6 +60,8 @@ rule sort_and_index_bam1:
         index = config['output_dir'] + "/map1_sort/{sample}.bam.bai"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/sort_and_index_bam1/{sample}.tsv"
+    resources:
+        mem_mb = 1100
     shell:
         "samtools sort -o {output.bam} {input} && "
         "samtools index {output.bam} && "
@@ -77,6 +84,8 @@ rule find_intersecting_snps:
         remap_bam = config['output_dir'] + "/find_intersecting_snps/{sample}.to.remap.bam"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/find_intersecting_snps/{sample}.tsv"
+    resources:
+        mem_mb = 10000
     shell:
         "python {input.find_intersecting_snps_script} "
             "--is_paired_end "
@@ -101,6 +110,8 @@ rule map_STAR2:
         temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/map_STAR2/{sample}.tsv"
+    resources:
+        mem_mb = 30000
     shell:
         "STAR --runThreadN 1 "
             "--genomeDir {input.index} "
@@ -119,6 +130,8 @@ rule sort_and_index_bam2:
         index = config['output_dir'] + "/map2_sort/{sample}.bam.bai"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/sort_and_index_bam2/{sample}.tsv"
+    resources:
+        mem_mb = 1100
     shell:
         "samtools sort -o {output.bam} {input} && "
         "samtools index {output.bam} && "
@@ -134,6 +147,8 @@ rule filter_remapped_reads:
         temp(config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/filter_remapped_reads/{sample}.tsv"
+    resources:
+        mem_mb = 3300
     shell:
         "python {input.filter_remapped_reads_script} "
         "{input.to_remap_bam} {input.remap_bam} {output}"
@@ -146,6 +161,8 @@ rule sort_filtered_bam:
         config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/sort_filtered_bam/{sample}.tsv"
+    resources:
+        mem_mb = 1100
     shell:
         "samtools sort -o {output} {input} && "
         "samtools index {output}"
@@ -160,6 +177,8 @@ rule rmdup:
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/rmdup_pe/{sample}.tsv"
+    resources:
+        mem_mb = 1500
     shell:
         "python {input.rmdup_script} {input.bam} {output.rmdup} && "
         "samtools sort -o {output.sort} {output.rmdup} && "

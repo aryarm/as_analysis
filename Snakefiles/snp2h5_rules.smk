@@ -18,7 +18,7 @@ rule get_WASP:
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/get_WASP/all.tsv"
     shell:
-        "[ ! -d \"{config[wasp_dir]}\"] && "
+        "[ ! -d \"{config[wasp_dir]}\" ] && "
         "curl -Ls https://api.github.com/repos/bmvdgeijn/WASP/tarball | "
         "tar zxf - -C \"{config[wasp_dir]}\" --strip-components 1"
 
@@ -47,6 +47,8 @@ checkpoint vcf_chroms:
         config['output_dir']+"/genotypes/chroms.txt"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/vcf_chroms/all.tsv"
+    resources:
+        mem_mb=200
     shell:
         "tabix --list-chroms {input.vcf} > {output}"
 
@@ -59,6 +61,8 @@ rule split_vcf_by_chr:
         temp(config['output_dir'] + "/genotypes/bychrom/ALL.{chr}.vcf.gz")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/split_vcf_by_chr/{chr}.tsv"
+    resources:
+        mem_mb=200
     shell:
         "tabix -h {input.vcf} {wildcards.chr} | bgzip > {output}"
 
@@ -81,6 +85,8 @@ rule vcf2h5:
         haplotype = config['snp_h5_dir'] + "/haplotype.h5"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/vcf2h5/all.tsv"
+    resources:
+        mem_mb=2000
     shell:
         "{input.snp2h5_script} "
             "--chrom {input.chrom} "

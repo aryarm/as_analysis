@@ -74,6 +74,8 @@ rule extract_gq_scores:
         config['output_dir'] + "/extract_gq/{vcf_sample}.tsv.gz"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/extract_gq/{vcf_sample}.tsv"
+    resources:
+        mem_mb = 100
     shell:
         "bcftools query -f '%CHROM\\t%POS\\t%REF\\t%ALT\\t[%GQ]\\n' "
         "-s {wildcards.vcf_sample} {input.vcf} | gzip >{output}"
@@ -114,7 +116,9 @@ rule get_as_counts:
         txt_counts = config['output_dir'] +
         "/as_counts/{sample}/{type}.as_counts.txt.gz"
     conda: "../envs/default.yaml"
-    benchmark: config['output_dir'] + "/benchmark/counts/as_counts/{sample}_{type}.tsv"
+    benchmark: config['output_dir'] + "/benchmark/counts/get_as_counts/{sample}_{type}.tsv"
+    resources:
+        mem_mb = 6300
     shell:
         "python {input.bam2h5_script} "
             "--chrom {input.chrom} "
@@ -139,6 +143,8 @@ rule extract_hets:
         "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/extract_hets/{sample}_{type}.tsv"
+    resources:
+        mem_mb = 50
     shell:
         "zcat {input} | grep -E ' 0\|1 | 1\|0 ' | gzip >{output}"
 
@@ -154,6 +160,8 @@ rule remove_indel_counts:
         "/as_counts/{sample}/{type}.as_counts.hets.snps.txt.gz"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/remove_indel_counts/{sample}_{type}.tsv"
+    resources:
+        mem_mb = 750
     shell:
         "Rscript --vanilla scripts/remove_indels.r {input} "
         "{params.sep} | gzip >{output}"
@@ -178,6 +186,8 @@ if config['rna_only']:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
         benchmark: config['output_dir'] + "/benchmark/counts/prepare_counts/{sample}.tsv"
+        resources:
+            mem_mb = 12500
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
@@ -194,6 +204,8 @@ if config['rna_only']:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         conda: "../envs/default.yaml"
         benchmark: config['output_dir'] + "/benchmark/counts/detect_imbalance/{sample}.tsv"
+        resources:
+            mem_mb = 1950
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance-rna.r {params.imbalance_script_path} "
@@ -224,6 +236,8 @@ else:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
         benchmark: config['output_dir'] + "/benchmark/counts/prepare_counts/{sample}.tsv"
+        resources:
+            mem_mb = 12500
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
@@ -241,6 +255,8 @@ else:
             config['output_dir'] + "/final/{sample}/result.csv.gz"
         conda: "../envs/default.yaml"
         benchmark: config['output_dir'] + "/benchmark/counts/detect_imbalance/{sample}.tsv"
+        resources:
+            mem_mb = 1950
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance.r {params.imbalance_script_path} "
