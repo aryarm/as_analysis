@@ -181,7 +181,7 @@ if config['rna_only']:
                 ),
             gene_info = config['gene_info']
         params:
-            output_dir = config['output_dir'] + "/final/{sample}/"
+            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/"
         output:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
@@ -230,7 +230,7 @@ else:
                 ),
             gene_info = config['gene_info']
         params:
-            output_dir = config['output_dir'] + "/final/{sample}/"
+            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/"
         output:
             dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"

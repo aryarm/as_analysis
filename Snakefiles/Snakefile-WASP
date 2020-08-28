@@ -35,7 +35,7 @@ rule map_STAR1:
         index = config['ref_genome_star'] if 'ref_genome_star' in config and \
             config['ref_genome_star'] else rules.create_STAR_index.output
     params:
-        prefix = config['output_dir'] + "/map1/{sample}/"
+        prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map1/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
@@ -76,7 +76,8 @@ rule find_intersecting_snps:
         haplotype = rules.vcf2h5.output.haplotype,
         find_intersecting_snps_script = rules.get_WASP.output.find_intersecting_snps_script
     params:
-        sample_names = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample]
+        sample_names = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample],
+        output_dir = lambda wildcards, output: str(Path(output.fastq1).parent)
     output:
         fastq1 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq1.gz",
         fastq2 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
@@ -90,7 +91,7 @@ rule find_intersecting_snps:
         "python {input.find_intersecting_snps_script} "
             "--is_paired_end "
             "--is_sorted "
-            "--output_dir {config[output_dir]}/find_intersecting_snps "
+            "--output_dir {params.output_dir} "
             "--snp_tab {input.snp_tab} "
             "--snp_index {input.snp_index} "
             "--haplotype {input.haplotype} "
@@ -105,7 +106,7 @@ rule map_STAR2:
         index = config['ref_genome_star'] if 'ref_genome_star' in config and \
             config['ref_genome_star'] else rules.create_STAR_index.output
     params:
-        prefix = config['output_dir'] + "/map2/{sample}/"
+        prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
     output:
         temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
