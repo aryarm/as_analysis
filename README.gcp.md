@@ -8,6 +8,7 @@ We offer preliminary cloud support for the WASP and counts pipelines. Follow the
 	- the `samples` file
 	- the `chrom_info` file
 	- the `gene_info` file
+4. Use your ERA Commons Account to get access to the GTEX data through a Terra-based Google Cloud storage bucket
 
 ## Caveats
 Some of the steps within our pipeline will not run properly on GCP. However, we've refrained from changing our pipeline to accommodate these problems because they are mostly related to bugs within Snakemake (or other things that we expect to improve with time).
