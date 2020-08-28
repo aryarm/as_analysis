@@ -12,10 +12,10 @@ We offer preliminary cloud support for the WASP and counts pipelines. Follow the
 ## Caveats
 Some of the steps within our pipeline will not run properly on GCP. However, we've refrained from changing our pipeline to accommodate these problems because they are mostly related to bugs within Snakemake (or other things that we expect to improve with time).
 
-| issue | affected rules | workaround |
-|---|---|---|---|---|
-| [directory() output](https://github.com/snakemake/snakemake/issues/576) |  | create_STAR_index |
-| [checkpoints](https://github.com/snakemake/snakemake/issues/574) | vcf_chroms, split_vcf_by_chr, vcf2h5 | download the VCF to the cluster, perform the affected steps manually, then reupload to the storage bucket |
-| [WASP](https://github.com/aryam7/WASP/issues/16) | get_WASP, install_WASP |  |
+issue | affected rules | workaround
+---|---|---
+[directory() output](https://github.com/snakemake/snakemake/issues/576) | create_STAR_index | perform this step manually on your cluster
+[checkpoints](https://github.com/snakemake/snakemake/issues/574) | vcf_chroms, split_vcf_by_chr, vcf2h5 | download the VCF to your cluster, perform the affected steps manually, then reupload to the storage bucket
+[WASP](https://github.com/aryam7/WASP/issues/16) | get_WASP, install_WASP | add WASP to your working directory (under git version control)
 
 ## [Planned Features (for the future)](https://github.com/aryam7/as_analysis/issues?q=is%3Aopen+is%3Aissue+label%3Agcp)
