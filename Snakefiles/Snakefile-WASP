@@ -71,6 +71,7 @@ rule find_intersecting_snps:
     """find intersecting SNPs using WASP script"""
     input:
         bam = rules.sort_and_index_bam1.output.bam,
+        index = rules.sort_and_index_bam1.output.index,
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
@@ -103,7 +104,7 @@ rule map_STAR2:
     input:
         fastq1 = rules.find_intersecting_snps.output.fastq1,
         fastq2 = rules.find_intersecting_snps.output.fastq2,
-        index = config['ref_genome_star'] if 'ref_genome_star' in config and \
+        reference = config['ref_genome_star'] if 'ref_genome_star' in config and \
             config['ref_genome_star'] else rules.create_STAR_index.output
     params:
         prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
@@ -115,7 +116,7 @@ rule map_STAR2:
         mem_mb = 30000
     shell:
         "STAR --runThreadN 1 "
-            "--genomeDir {input.index} "
+            "--genomeDir {input.reference} "
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
             "--outSAMtype BAM Unsorted "
@@ -143,6 +144,7 @@ rule filter_remapped_reads:
     input:
         to_remap_bam = rules.find_intersecting_snps.output.remap_bam,
         remap_bam = rules.sort_and_index_bam2.output.bam,
+        index = rules.sort_and_index_bam2.output.index,
         filter_remapped_reads_script = rules.get_WASP.output.filter_remapped_reads_script
     output:
         temp(config['output_dir'] + "/filter_remapped_reads/{sample}.keep.bam")
@@ -159,19 +161,22 @@ rule sort_filtered_bam:
     input:
         rules.filter_remapped_reads.output
     output:
-        config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam"
+        bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam",
+        index = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam.bai"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/sort_filtered_bam/{sample}.tsv"
     resources:
         mem_mb = 1100
     shell:
         "samtools sort -o {output} {input} && "
-        "samtools index {output}"
+        "samtools index {output} && "
+        "touch -c {output.bam}"
 
 rule rmdup:
     """remove duplicate read pairs"""
     input:
-        bam = rules.sort_filtered_bam.output,
+        bam = rules.sort_filtered_bam.output.bam,
+        index = rules.sort_filtered_bam.output.index,
         rmdup_script = rules.get_WASP.output.rmdup_script
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
