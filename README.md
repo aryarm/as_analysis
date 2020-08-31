@@ -41,7 +41,11 @@ You must modify [the config.yaml file](config.yaml) to specify paths to your dat
 ### Executing each portion of the pipeline separately
 The entire pipeline is made up of three different sections. We provide a single [Snakefile](Snakefile) to execute all of them at once, but you can also execute each of these sections on their own. For each section that you'd like to run separately, you must fill out a new config file. You can find more information about these individual portions of the pipeline and how to execute them in the [Snakefiles directory](Snakefiles).
 
-### [Executing the pipeline on Google Cloud](README.gcp.md)
+### Executing the pipeline on Google Cloud
+```
+./run-gcp &
+```
+See the [Google Cloud README](README.gcp.md) for full instructions.
 
 ### If this is your first time using Snakemake
 We recommend that you run `snakemake --help` to learn about Snakemake's options. For example, to check that the pipeline will be executed correctly before you run it, you can call Snakemake with the `-n -p -r` flags. This is also a good way to familiarize yourself with the steps of the pipeline and their inputs and outputs (the latter of which are inputs to the first rule in each workflow -- ie the `all` rule).

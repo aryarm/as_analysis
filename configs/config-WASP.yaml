@@ -10,21 +10,21 @@
 #       <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq1_rna_path> <fastq2_rna_path>
 # Or if you don't have a BAM file, you can leave it out to perform a more
 # conservative version of the ASE test (see the 'rna_only' config below)
-"sample_file" : "/iblm/netapp/home/amassarat/allele_specific_analysis/snakemake/samples-WASP.tsv"
+"sample_file" : "samples.tsv"
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
-"ref_genome" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/WholeGenomeFasta/genome.fa"
+"ref_genome" : "data/hg38.fa"
 
 # The path to a STAR index directory for "ref_genome"
 # If "ref_genome" is provided but not this, the pipeline will create the index
 # on the fly
-"ref_genome_star" : "/iblm/netapp/home/amassarat/allele_specific_analysis/ref_data/StarIndex"
+# "ref_genome_star" : "data/star_index"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
 # Make sure that the presence/absence of a chr prefix in this file matches what you have in your VCF (and your snp_h5_dir files if provided)!
-"chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
+"chrom_info" : "data/chromInfo.txt.gz"
 
 # If the <dna_bam_path> column is left out in the sample file, or if you set
 # the rna_only option below to true, the pipeline will default to running the
@@ -37,12 +37,12 @@
 # under the "PRI" regions label
 # If you provided a STAR index directory in 'ref_genome_star' above, you should
 # provide the same gtf that you used to create that index
-"gene_info" : "/iblm/netapp/home/amassarat/allele_specific_analysis/other_data/gencode.v19.genes.chr.gtf"
+"gene_info" : "data/gencode.v26.GRCh38.genes.gtf"
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
 # Otherwise, specify the location of the directory in which you'd like it installed
 # When this option is not provided, the pipeline will install WASP in your .snakemake directory
-"wasp_dir" : "/iblm/netapp/home/amassarat/bin/WASP"
+"wasp_dir" : "WASP"
 
 # directory in which to output all of the output files
 # defined relative to whatever directory you execute the snakemake command in
@@ -51,13 +51,13 @@
 # A VCF file with which to run WASP. This can come from the variant calling pipeline
 # The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
 # It must also contain genotype quality (GQ) information
-"vcf_file" : "out/genotypes/ALL.vcf.gz"
+"vcf_file" : "data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.SHAPEIT2_phased.vcf.gz"
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
 # When this option is not provided, the pipeline will use {output_dir}/genotypes/snp_h5
 # Make sure that the presence/absence of a chr prefix in your chrom_info file match those in the h5 files!
-"snp_h5_dir" : "out/genotypes/snp_h5"
+# "snp_h5_dir" : "out/genotypes/snp_h5"
 
 # For internal use.
 # This config option is required.
