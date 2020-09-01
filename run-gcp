@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#$ -t 1
+#$ -V
+#$ -j y
+#$ -cwd
+#$ -o /dev/null
+#$ -e /dev/null
+
+# An example bash script demonstrating how to run the entire snakemake pipeline
+# This script creates two separate log files:
+# 	1) log - the basic snakemake log of completed rules
+# 	2) qlog - a more detailed log of the progress of each rule and any errors
+
+# Before running this snakemake pipeline, remember to verify that the config
+# file has been appropriately completed with the required input info. In
+# particular, make sure that you have created a samples.tsv file specifying
+# paths to the fastq files for each of your samples.
+# Make sure that this script is executed from the directory that it lives in!
+
+mkdir -p log
+
+# clear leftover log files
+if [ -f "log/log" ]; then
+	echo ""> "log/log";
+fi
+if [ -f "log/qlog" ]; then
+	echo ""> "log/qlog";
+fi
+
+# try to find and activate the snakemake conda env if we need it
+if ! command -v 'snakemake' &>/dev/null && \
+   command -v 'conda' &>/dev/null && \
+   [ "$CONDA_DEFAULT_ENV" != "snakemake" ] && \
+   conda info --envs | grep "$CONDA_ROOT/snakemake" &>/dev/null; then
+	echo "Snakemake not detected. Attempting to switch to snakemake environment." >> "log/log"
+	eval "$(conda shell.bash hook)"
+	conda activate snakemake
+fi
+
+# you should change the google life sciences values to whatever works for your setup!
+# see https://snakemake.readthedocs.io/en/stable/executor_tutorial/google_lifesciences.html
+snakemake \
+--google-lifesciences \
+--default-remote-prefix salk-mcvicker-poc_test \
+--google-lifesciences-region us-west2 \
+--default-resources 'disk_mb=35000' \
+-j \
+--notemp \
+--latency-wait 120 \
+--use-conda \
+"$@" &>"log/log"
+
+# message the user on slack if possible
+exit_code="$?"
+if command -v 'slack' &>/dev/null; then
+	if [ "$exit_code" -eq 0 ]; then
+		slack "snakemake finished successfully" &>/dev/null
+	else
+		slack "$(tail -n4 "log/log")" &>/dev/null
+	fi
+fi
+exit "$exit_code"
