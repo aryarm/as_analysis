@@ -29,7 +29,6 @@ issue | affected rules | workaround
 
 ## Other challenges
  - Your rules might run out of disk space or memory. Try raising the default in `run-gcp`. In the future, [the default might be smarter](https://github.com/aryam7/as_analysis/issues/58).
- - When jobs fail, it can be difficult to debug them because of the ephemeral nature of the log files. And [the recommended solution in Snakemake's Life Sciences Executor does not seem to work](https://github.com/snakemake/snakemake/issues/589#issue-688213936). [Plans](https://github.com/snakemake/snakemake/issues/457#issuecomment-678048646) are underway to improve this.
 
 ## Planned features
 There are [a number of cloud-related features](https://github.com/aryam7/as_analysis/issues?q=is%3Aopen+is%3Aissue+label%3Agcp) for the pipeline that might be in-the-works. Check them out!
@@ -37,4 +36,4 @@ There are [a number of cloud-related features](https://github.com/aryam7/as_anal
 ## Other resources
  - There is not a lot of documentation available to explain how Snakemake interacts with the Life Sciences API and Compute Engine. [These slides](https://docs.google.com/presentation/d/1UUE9yHEpvE7QyvSzkc5imfmDw26bi_eepZFKgpvW5xw) might help.
  - [Documentation for the Cloud Life Sciences API](https://cloud.google.com/life-sciences/docs/reference/rest/v2beta/projects.locations.pipelines/run)
- - [A script that might help you work around the log challenge](https://gist.github.com/aryam7/8ab14ef42de9f085ecd47f2409520c15)
+ - [A script that can help you debug your jobs in real time](https://gist.github.com/aryam7/8ab14ef42de9f085ecd47f2409520c15)
