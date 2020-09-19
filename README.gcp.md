@@ -29,6 +29,7 @@ issue | affected rules | workaround
 
 ## Other challenges
  - Your rules might run out of disk space or memory. Try raising the default in `run-gcp`. In the future, [the default might be smarter](https://github.com/aryam7/as_analysis/issues/58).
+ - The Snakemake documentation [recommends using `gcloud beta lifesciences operations describe`](https://snakemake.readthedocs.io/en/stable/executor_tutorial/google_lifesciences.html#step-5-debugging) to view the stderr of failed steps in the pipeline. Unfortunately, this will only give you the last 10 lines of the stderr. Snakemake will create files containing the full stderr inside your storage bucket. The path to these files will be specified in your local `log/log` file after "Logs will be saved to..."
 
 ## Planned features
 There are [a number of cloud-related features](https://github.com/aryam7/as_analysis/issues?q=is%3Aopen+is%3Aissue+label%3Agcp) for the pipeline that might be in-the-works. Check them out!
