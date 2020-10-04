@@ -7,7 +7,7 @@ A Snakemake pipeline for detecting allelic imbalance from DNA and RNA seq reads
 # download
 Execute the following command.
 ```
-git clone https://github.com/aryam7/as_analysis.git
+git clone https://github.com/aryarm/as_analysis.git
 ```
 
 # setup
