@@ -3,7 +3,7 @@
 If you'd like to run the counts pipeline on its own, you should provide required input in [configs/config-counts.yaml](/configs/config-counts.yaml).
 
 ## Inputs
- - FASTQ files containing DNA and RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | dna_bam_path | rna_bam_path` where each row is a different sample.
+ - BAM files containing DNA and RNA sequencing reads for each sample. Specify the location of these files in a tab delimited text file containing four columns: `vcf_sample_id | unique_sample_name | dna_bam_path | rna_bam_path` where each row is a different sample.
  
      If you don't have DNA sequencing reads, you can still run the pipeline using a more conservative version of our ASE test by setting the [`rna_only` config option](/configs/config-counts.yaml#L16) to true.
      
