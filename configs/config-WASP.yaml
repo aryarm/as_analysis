@@ -44,6 +44,12 @@
 # When this option is not provided, the pipeline will install WASP in your .snakemake directory
 "wasp_dir" : "WASP"
 
+# You can substitute ATAC-seq data for RNA-seq data!
+# Just set this config option to "true", so that the pipeline uses BWA instead of STAR
+# Also, you must provide a BWA-indexed reference genome via the "ref_genome" option (see above)
+# This option will default to false if not provided
+"asoc": false
+
 # directory in which to output all of the output files
 # defined relative to whatever directory you execute the snakemake command in
 "output_dir" : "out"
