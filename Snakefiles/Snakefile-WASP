@@ -198,8 +198,8 @@ rule sort_filtered_bam:
     resources:
         mem_mb = 1100
     shell:
-        "samtools sort -o {output} {input} && "
-        "samtools index {output} && "
+        "samtools sort -o {output.bam} {input} && "
+        "samtools index {output.bam} && "
         "touch -c {output.bam}"
 
 rule rmdup:
