@@ -37,8 +37,17 @@
 
 # An indexed VCF file with which to run WASP bam2h5. This comes from the variant_calling pipeline
 # The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
-# It must also contain genotype quality (GQ) information
+# It must also contain genotype quality (GQ) information. Otherwise, you must set
+# a default in "default_gq" below
 "vcf_file" : "out/genotypes/ALL.vcf.gz"
+
+# Set this option to a default GQ value if your VCF lacks GQ information. This default
+# will be used for all variant records. We recommend a default of 20, which will
+# generally lead to a more conservative test for allele-specific expression than
+# if the VCF had GQ tags
+# If this option is commented out or set to a falsey value, the pipeline will assume
+# GQ tags exist in the VCF you provided
+"default_gq": false
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
