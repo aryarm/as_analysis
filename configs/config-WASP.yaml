@@ -10,7 +10,7 @@
 #       <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq1_rna_path> <fastq2_rna_path>
 # Or if you don't have a BAM file, you can leave it out to perform a more
 # conservative version of the ASE test (see the 'rna_only' config below)
-"sample_file" : "samples.tsv"
+"sample_file" : "data/samples.tsv"
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
@@ -35,6 +35,8 @@
 # Gene annotation information in the GTF format.
 # These can usually be obtained from GENCODE (https://www.gencodegenes.org/human/)
 # under the "PRI" regions label
+# You can also obtain them from the UCSC server using these instructions:
+# https://genome.ucsc.edu/FAQ/FAQgenes.html#gtfDownload
 # If you provided a STAR index directory in 'ref_genome_star' above, you should
 # provide the same gtf that you used to create that index
 "gene_info" : "data/gencode.v26.GRCh38.genes.gtf"
