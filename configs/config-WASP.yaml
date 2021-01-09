@@ -10,7 +10,7 @@
 #       <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq1_rna_path> <fastq2_rna_path>
 # Or if you don't have a BAM file, you can leave it out to perform a more
 # conservative version of the ASE test (see the 'rna_only' config below)
-"sample_file" : "samples.tsv"
+"sample_file" : "data/samples.tsv"
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
@@ -35,6 +35,8 @@
 # Gene annotation information in the GTF format.
 # These can usually be obtained from GENCODE (https://www.gencodegenes.org/human/)
 # under the "PRI" regions label
+# You can also obtain them from the UCSC server using these instructions:
+# https://genome.ucsc.edu/FAQ/FAQgenes.html#gtfDownload
 # If you provided a STAR index directory in 'ref_genome_star' above, you should
 # provide the same gtf that you used to create that index
 "gene_info" : "data/gencode.v26.GRCh38.genes.gtf"
@@ -44,14 +46,29 @@
 # When this option is not provided, the pipeline will install WASP in your .snakemake directory
 "wasp_dir" : "WASP"
 
+# You can substitute ATAC-seq data for RNA-seq data!
+# Just set this config option to "true", so that the pipeline uses BWA instead of STAR
+# Also, you must provide a BWA-indexed reference genome via the "ref_genome" option (see above)
+# This option will default to false if not provided
+"asoc": false
+
 # directory in which to output all of the output files
 # defined relative to whatever directory you execute the snakemake command in
 "output_dir" : "out"
 
 # A VCF file with which to run WASP. This can come from the variant calling pipeline
 # The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
-# It must also contain genotype quality (GQ) information
+# It must also contain genotype quality (GQ) information. Otherwise, you must set
+# a default in "default_gq" below
 "vcf_file" : "data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.SHAPEIT2_phased.vcf.gz"
+
+# Set this option to a default GQ value if your VCF lacks GQ information. This default
+# will be used for all variant records. We recommend a default of 20, which will
+# generally lead to a more conservative test for allele-specific expression than
+# if the VCF had GQ tags
+# If this option is commented out or set to a falsey value, the pipeline will assume
+# GQ tags exist in the VCF you provided
+"default_gq": false
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location

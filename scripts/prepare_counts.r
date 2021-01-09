@@ -9,7 +9,12 @@ dna = read.table(gzfile(args[1]), sep=" ", header=F, stringsAsFactors=F, col.nam
 # import rna counts for this sample
 rna = read.table(gzfile(args[2]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
 # import gq data for this sample
-gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"), stringsAsFactors=F)
+use_default_gq = !is.na(as.integer(args[3]))
+if (use_default_gq) {
+  gq = as.integer(args[3])
+} else {
+  gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"), stringsAsFactors=F)
+}
 # import gene info from gencode
 genes= as(readGFF(args[4]), "GRanges")
 # what is the output directory prefix? note that it should have a trailing slash
@@ -26,20 +31,25 @@ dna$genotype = NULL
 rna$genotype = NULL
 
 # process gq data
-# create rsID column for later merging and get rid of other columns
-gq$rsID = paste0(gq$CHROM, ":", gq$POS, "_", gq$REF, "/", gq$ALT)
-gq$CHROM = NULL
-gq$POS = NULL
-gq$REF = NULL
-gq$ALT = NULL
-# remove any SNPs for which the genotype quality is unknown
-# and then convert it to a numeric type
-gq = gq[gq$GQ != ".",]
-gq$GQ = as.numeric(as.character(gq$GQ))
-# generate the genotype.error column
-gq$genotype.error = 10^{-(gq$GQ/10)}
-# retain only the cols that we need
-gq = gq[c("genotype.error", "rsID")]
+if (use_default_gq) {
+  # calculate the genotype error
+  gq = 10^{-(gq/10)}
+} else {
+  # create rsID column for later merging and get rid of other columns
+  gq$rsID = paste0(gq$CHROM, ":", gq$POS, "_", gq$REF, "/", gq$ALT)
+  gq$CHROM = NULL
+  gq$POS = NULL
+  gq$REF = NULL
+  gq$ALT = NULL
+  # remove any SNPs for which the genotype quality is unknown
+  # and then convert it to a numeric type
+  gq = gq[gq$GQ != ".",]
+  gq$GQ = as.numeric(as.character(gq$GQ))
+  # generate the genotype.error column
+  gq$genotype.error = 10^{-(gq$GQ/10)}
+  # retain only the cols that we need
+  gq = gq[c("genotype.error", "rsID")]
+}
 
 # process allele specific counts
 proc_counts= function(counts, genes){
@@ -75,9 +85,13 @@ rm(genes)
 
 # add genotype.error from gq to dna by JOINing on common column rsID
 message("Adding genotype error to ", nrow(dna), " DNA SNPs...")
-dna = inner_join(dna, gq, by="rsID")
-# save memory by removing gq, it isn't needed anymore
-rm(gq)
+if (use_default_gq) {
+  dna$genotype.error = gq
+} else {
+  dna = inner_join(dna, gq, by="rsID")
+  # save memory by removing gq, it isn't needed anymore
+  rm(gq)
+}
 
 # intersect dna and rna data frames with each other to get common rows
 message("Removing any SNPS that aren't present in both DNA and RNA because of filtering...")

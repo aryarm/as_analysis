@@ -176,12 +176,15 @@ if config['rna_only']:
                     sample=wildcards.sample, type="rna"
                 ),
             gq_file = lambda wildcards:
+                [] if 'default_gq' in config and config['default_gq'] else \
                 rules.extract_gq_scores.output[0].format(
                     vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
             gene_info = config['gene_info']
         params:
-            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/"
+            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/",
+            gq = lambda wildcards, input: config['default_gq'] if 'default_gq' in config \
+                and config['default_gq'] else input.gq_file
         output:
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
         conda: "../envs/default.yaml"
@@ -191,7 +194,7 @@ if config['rna_only']:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
-            "{input.gq_file} {input.gene_info} {params.output_dir}"
+            "{params.gq} {input.gene_info} {params.output_dir}"
 
     rule detect_imbalance:
         """quantify allelic imbalance in genes for each sample"""
@@ -225,12 +228,15 @@ else:
                     sample=wildcards.sample, type="rna"
                 ),
             gq_file = lambda wildcards:
+                [] if 'default_gq' in config and config['default_gq'] else \
                 rules.extract_gq_scores.output[0].format(
                     vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
             gene_info = config['gene_info']
         params:
-            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/"
+            output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/",
+            gq = lambda wildcards, input: config['default_gq'] if 'default_gq' in config \
+                and config['default_gq'] else input.gq_file
         output:
             dna = config['output_dir'] + "/final/{sample}/dna.csv.gz",
             rna = config['output_dir'] + "/final/{sample}/rna.csv.gz"
@@ -241,7 +247,7 @@ else:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
-            "{input.gq_file} {input.gene_info} {params.output_dir}"
+            "{params.gq} {input.gene_info} {params.output_dir}"
 
     rule detect_imbalance:
         """quantify allelic imbalance in genes for each sample"""
