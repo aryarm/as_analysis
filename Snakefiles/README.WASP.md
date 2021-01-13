@@ -25,12 +25,20 @@ Here is a skeleton diagram of our adaption of the pipeline:
     If your VCF _has_ been converted to the hdf5 format, you should specify the directory of your hdf5 files as the `snp_h5_dir`. The `geno_probs.h5` files are not required. Note: you will still need to provide a VCF file.
  - Gene annotation information in the GTF format. These can ususally be obtained from GENCODE. For example, annotations for hg19 can be downloaded from [here](https://www.gencodegenes.org/releases/19.html).
 
-## Running the WASP pipeline on its own
+## Running the WASP and counts pipelines
 Make sure to download [WASP](https://github.com/bmvdgeijn/WASP) before running the pipeline. In your config file, you must specify the path to the directory in which you downloaded it.
 
 When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use the `--configfile` option to specify the location of the corresponding config file. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
     snakemake --configfile configs/config-WASP.yaml --use-conda
+
+ 
+## Running the WASP pipeline on its own
+Make sure to download [WASP](https://github.com/bmvdgeijn/WASP) before running the pipeline. In your config file, you must specify the path to the directory in which you downloaded it.
+
+When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use the `-s` option to specify the path to the WASP Snakefile. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
+
+    snakemake -s Snakefiles/Snakefile-WASP --configfile configs/config-WASP.yaml --use-conda
 
 ## Output
 The WASP pipeline creates the following directories under the output directory specified in your config file. The `rmdup` folder will contain the final output, filtered BAM files containing RNA reads that overlap a SNP in each sample. Note that the counts pipeline is usually automatically executed after the WASP pipeline, but it's output is not included here.
