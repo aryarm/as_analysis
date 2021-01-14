@@ -210,7 +210,8 @@ rule rmdup:
         rmdup_script = rules.get_WASP.output.rmdup_script
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
-        sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
+        sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
+        index = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam.bai"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/rmdup_pe/{sample}.tsv"
     resources:
