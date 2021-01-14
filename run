@@ -42,7 +42,7 @@ fi
 if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
 	snakemake \
 	--cluster "qsub -t 1 -V -j y -cwd -o $out_path/qlog" \
-	--config out="$out_path" \
+	--config output_dir="$out_path" \
 	--latency-wait 60 \
 	--use-conda \
 	-k \
@@ -51,7 +51,7 @@ if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
 	"$@" &>>"$out_path/log"
 else
 	snakemake \
-	--config out="$out_path" \
+	--config ouput_dir="$out_path" \
 	--latency-wait 60 \
 	--use-conda \
 	-k \
