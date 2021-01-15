@@ -14,6 +14,7 @@
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
+# Note: the FASTA file should not be gzipped
 "ref_genome" : "data/hg38.fa"
 
 # The path to a STAR index directory for "ref_genome"
@@ -39,6 +40,7 @@
 # https://genome.ucsc.edu/FAQ/FAQgenes.html#gtfDownload
 # If you provided a STAR index directory in 'ref_genome_star' above, you should
 # provide the same gtf that you used to create that index
+# Note: the GTF file should not be gzipped
 "gene_info" : "data/gencode.v26.GRCh38.genes.gtf"
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
