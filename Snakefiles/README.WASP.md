@@ -36,9 +36,9 @@ When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_start
 ## Running the WASP pipeline on its own
 Make sure to download [WASP](https://github.com/bmvdgeijn/WASP) before running the pipeline. In your config file, you must specify the path to the directory in which you downloaded it.
 
-When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use the `-s` option to specify the path to the WASP Snakefile. We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
+When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_started/installation.html), use the `-U` option to tell it to run the pipeline until the last step of the WASP subworkflow (ie the `rmdup` step). We also recommend using the `--use-conda` option to let Snakemake [handle all dependencies](http://snakemake.readthedocs.io/en/latest/snakefiles/deployment.html#integrated-package-management) of the pipeline.
 
-    snakemake -s Snakefiles/Snakefile-WASP --configfile configs/config-WASP.yaml --use-conda
+    snakemake --configfile configs/config-WASP.yaml --use-conda -U rmdup
 
 ## Output
 The WASP pipeline creates the following directories under the output directory specified in your config file. The `rmdup` folder will contain the final output, filtered BAM files containing RNA reads that overlap a SNP in each sample. Note that the counts pipeline is usually automatically executed after the WASP pipeline, but it's output is not included here.
