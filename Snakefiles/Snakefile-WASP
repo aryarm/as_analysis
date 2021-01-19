@@ -95,7 +95,7 @@ rule find_intersecting_snps:
         sample_names = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample],
         output_dir = lambda wildcards, output: str(Path(output.fastq1).parent)
     output:
-        fastq1 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq1.gz",
+        fastq1 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq.gz",
 #        fastq2 = config['output_dir'] + "/find_intersecting_snps/{sample}.remap.fq2.gz",
         keep_bam = temp(config['output_dir'] + "/find_intersecting_snps/{sample}.keep.bam"),
         remap_bam = config['output_dir'] + "/find_intersecting_snps/{sample}.to.remap.bam"
