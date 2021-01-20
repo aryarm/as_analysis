@@ -12,6 +12,7 @@ def check_config(value, default=False, place=config):
     return place[value] if (value in place and place[value]) else default
 
 no_variant_calling = check_config('vcf_file')
+unpaired = check_config('unpaired')
 
 def read_samples():
     """Function to get names and dna/rna fastq paths from a sample file
@@ -23,17 +24,24 @@ def read_samples():
     <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq1_rna_path> <fastq2_rna_path>
     or (optionally) just these four:
     <vcf_sample_id> <unique_sample_name> <fastq1_rna_path> <fastq2_rna_path>
+    Or if the unpaired config option is also provided, the input file
+    is expected to have these four columns:
+    <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq_rna_path>
+    or (optionally) just these three:
+    <vcf_sample_id> <unique_sample_name> <fastq_rna_path>
     Modify this function as needed to provide the correct dictionary."""
     f = open(config['sample_file'], "r")
     samp_dict = {}
     for line in f:
         words = line.strip().split("\t")
         if no_variant_calling:
-            if len(words) == 5:
-                samp_dict[words[1]] = (words[2], (words[3], words[4]))
-            elif len(words) == 4:
+            if len(words) == (5-unpaired):
+                fastq = words[3] if unpaired else (words[3], words[4])
+                samp_dict[words[1]] = (words[2], fastq)
+            elif len(words) == (4-unpaired):
                 # then the dna_bam_path hasn't been specified
-                samp_dict[words[1]] = ((words[2], words[3]),)
+                fastq = words[2] if unpaired else (words[2], words[3])
+                samp_dict[words[1]] = (fastq,)
                 # sanity check to make sure that rna_only is set to true
                 config['rna_only'] = True
             else:
