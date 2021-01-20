@@ -17,7 +17,9 @@
 # paths to the fastq files for each of your samples.
 # Make sure that this script is executed from the directory that it lives in!
 
-out_path="out" # you can specify a dir for all output here (or in the config)
+# you can specify a dir for all output here
+# it will override whatever value you set for the output_dir in the config file
+out_path="out"
 mkdir -p "$out_path"
 
 # clear leftover log files
@@ -42,7 +44,7 @@ fi
 if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
 	snakemake \
 	--cluster "qsub -t 1 -V -j y -cwd -o $out_path/qlog" \
-	--config out="$out_path" \
+	--config output_dir="$out_path" \
 	--latency-wait 60 \
 	--use-conda \
 	-k \
@@ -51,7 +53,7 @@ if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
 	"$@" &>>"$out_path/log"
 else
 	snakemake \
-	--config out="$out_path" \
+	--config ouput_dir="$out_path" \
 	--latency-wait 60 \
 	--use-conda \
 	-k \
@@ -65,7 +67,8 @@ if command -v 'slack' &>/dev/null; then
 	if [ "$exit_code" -eq 0 ]; then
 		slack "snakemake finished successfully" &>/dev/null
 	else
-		slack "$(tail -n4 "$out_path/log")" &>/dev/null
+        slack "snakemake as_analysis job failed" &>/dev/null
+        slack "$(tail -n4 "$out_path/log")" &>/dev/null
 	fi
 fi
 exit "$exit_code"
