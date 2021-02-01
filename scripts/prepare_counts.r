@@ -55,7 +55,7 @@ if (use_default_gq) {
 proc_counts= function(counts, genes){
   # load counts and proportions
   counts$N=rowSums(counts[,c("ref.matches","alt.matches")])
-  counts$p= counts$ref.matches/counts$N
+  counts$ref_prop= counts$ref.matches/counts$N
   
   # step 1 filter counts
   message("- Removing ", sum(counts$N < 10), " SNPs that have low read counts")
@@ -103,9 +103,9 @@ rna= rna[rna$rsID %in% INT,]
 message("Writing ", nrow(dna), " final SNPs to file...\n")
 dna_output = paste0(output_dir, "dna.csv")
 rna_output = paste0(output_dir, "rna.csv")
-write.csv(dna, dna_output, row.names = F)
+write.csv(dna, dna_output, row.names = F, quote = F)
 system(paste("gzip", dna_output))
-write.csv(rna, rna_output, row.names = F)
+write.csv(rna, rna_output, row.names = F, quote = F)
 system(paste("gzip", rna_output))
 
 # if we got this far, we were probably successful

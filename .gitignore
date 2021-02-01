@@ -1,3 +1,4 @@
 .snakemake
 out
 data/
+asoc_out/
