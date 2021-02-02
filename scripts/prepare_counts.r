@@ -2,12 +2,13 @@ suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
 suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
+library(tools)
 
 args = commandArgs(trailingOnly = TRUE)
 # import dna counts for this sample
 dna = read.table(gzfile(args[1]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
 # import rna counts for this sample
-rna = read.table(gzfile(args[2]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
+counts = read.table(gzfile(args[2]), sep=" ", header=F, stringsAsFactors=F, col.names=c("chr", "start", "ref", "alt", "genotype", "ref.matches", "alt.matches", "errors"))
 # import gq data for this sample
 use_default_gq = !is.na(as.integer(args[3]))
 if (use_default_gq) {
@@ -16,19 +17,24 @@ if (use_default_gq) {
   gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"), stringsAsFactors=F)
 }
 # import gene info from gencode
-genes= as(readGFF(args[4]), "GRanges")
+targets <- NULL
+if (file_ext(args[4]) == "gtf") {
+  targets <- as(readGFF(args[4]), "GRanges")
+} else if (file_ext(args[4]) == "bed") {
+  targets <- import(args[4], format = "bed")
+}
 # what is the output directory prefix? note that it should have a trailing slash
 output_dir = args[5]
 
 # switch ref and alt counts if genotype is 1|0
 dna = transform(dna, ref.matches = ifelse(genotype == "1|0", alt.matches, ref.matches), alt.matches = ifelse(genotype == "1|0", ref.matches, alt.matches))
-rna = transform(rna, ref.matches = ifelse(genotype == "1|0", alt.matches, ref.matches), alt.matches = ifelse(genotype == "1|0", ref.matches, alt.matches))
+counts = transform(counts, ref.matches = ifelse(genotype == "1|0", alt.matches, ref.matches), alt.matches = ifelse(genotype == "1|0", ref.matches, alt.matches))
 # create unique rsID column for later merging with gq
 dna$rsID = paste0(dna$chr, ":", dna$start, "_", dna$ref, "/", dna$alt)
-rna$rsID = paste0(rna$chr, ":", rna$start, "_", rna$ref, "/", rna$alt)
+counts$rsID = paste0(counts$chr, ":", counts$start, "_", counts$ref, "/", counts$alt)
 # remove genotype col, since all rows should be heterozygotes already
 dna$genotype = NULL
-rna$genotype = NULL
+counts$genotype = NULL
 
 # process gq data
 if (use_default_gq) {
@@ -77,11 +83,11 @@ proc_counts= function(counts, genes){
 
 # process dna and rna count data, adding gene information
 message("Processing dna counts of ", nrow(dna), " SNPs...")
-dna = proc_counts(dna, genes)
-message("Processing rna counts of ", nrow(rna), " SNPs...")
-rna = proc_counts(rna, genes)
+dna = proc_counts(dna, targets)
+message("Processing read counts of ", nrow(counts), " SNPs...")
+counts = proc_counts(counts, targets)
 # save memory by removing genes. it isn't needed anymore
-rm(genes)
+rm(targets)
 
 # add genotype.error from gq to dna by JOINing on common column rsID
 message("Adding genotype error to ", nrow(dna), " DNA SNPs...")
@@ -97,16 +103,16 @@ if (use_default_gq) {
 message("Removing any SNPS that aren't present in both DNA and RNA because of filtering...")
 INT= intersect(dna$rsID, rna$rsID)
 dna= dna[dna$rsID %in% INT,]
-rna= rna[rna$rsID %in% INT,]
+counts= counts[counts$rsID %in% INT,]
 
 # save the results to csv files
 message("Writing ", nrow(dna), " final SNPs to file...\n")
 dna_output = paste0(output_dir, "dna.csv")
-rna_output = paste0(output_dir, "rna.csv")
+counts_output = paste0(output_dir, "counts.csv")
 write.csv(dna, dna_output, row.names = F, quote = F)
 system(paste("gzip", dna_output))
-write.csv(rna, rna_output, row.names = F, quote = F)
-system(paste("gzip", rna_output))
+write.csv(counts, counts_output, row.names = F, quote = F)
+system(paste("gzip", counts_output))
 
 # if we got this far, we were probably successful
 quit(status=0)
