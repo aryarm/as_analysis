@@ -3,4 +3,5 @@ out
 data/
 asoc_out/
 ase_out/
-*._*
+._*
+.Rhistory
