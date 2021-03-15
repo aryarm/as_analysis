@@ -73,7 +73,7 @@ proc_counts= function(counts, targets){
   targets= as.data.frame(targets[subjectHits(hits)])
   counts$target= targets$gene_id
   counts= counts[!duplicated(counts),]
-  message("- Removed ", num_old_counts-nrow(counts), " SNPs that don't overlap a gene")
+  message("- Removed ", num_old_counts-nrow(counts), " SNPs that don't overlap a target region")
   counts
 }
 
