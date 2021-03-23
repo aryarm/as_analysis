@@ -14,6 +14,11 @@
 # Make sure that the presence/absence of a chr prefix in this file matches what you have in your VCF (and your snp_h5_dir files if provided)!
 "chrom_info" : "/iblm/netapp/home/amassarat/bin/WASP/examples/example_data/chromInfo.hg19.txt"
 
+# If you are working with ATAC-seq data instead of RNA-seq data, set this config
+# option to true. In that case, you must provide an extra BED file as the last
+# column of the sample file.
+"asoc": false
+
 # If the <dna_bam_path> column is left out in the sample file, or if you set
 # the rna_only option below to true, the pipeline will default to running the
 # rna-only version of the analysis, in which DNA read counts are ignored. This

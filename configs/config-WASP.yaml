@@ -18,6 +18,11 @@
 # or commented out, both FASTQs will be used.
 "unpaired": false
 
+# If you are working with ATAC-seq data instead of RNA-seq data, set this config
+# option to true. In that case, you must provide an extra BED file as the last
+# column of the sample file.
+"asoc": false
+
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
 # Note: the FASTA file should not be gzipped
