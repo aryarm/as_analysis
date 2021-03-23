@@ -12,8 +12,8 @@ if 'SAMP3' not in globals():
     def read_samples():
         """Function to get names and fastq paths from a sample file specified
         in the configuration. Input file is expected to have 4 columns:
-        <vcf_sample_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>. If asoc 
-        is set to true, input file will have 5 columns: 
+        <vcf_sample_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>. If asoc
+        is set to true, input file will have 5 columns:
         <vcf_sample_id> <unique_sample_id> <dna_bam_path> <atac_bam_path> <bed_path>.
         If <dna_bam_path> is left out, the pipeline will default to an rna-only
         analysis, which doesn't require dna reads but is more conservative.
