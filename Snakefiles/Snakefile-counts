@@ -12,8 +12,10 @@ if 'SAMP3' not in globals():
     def read_samples():
         """Function to get names and fastq paths from a sample file specified
         in the configuration. Input file is expected to have 4 columns:
-        <vcf_sample_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>. If
-        <dna_bam_path> is left out, the pipeline will default to an rna-only
+        <vcf_sample_id> <unique_sample_id> <dna_bam_path> <rna_bam_path>. If asoc 
+        is set to true, input file will have 5 columns: 
+        <vcf_sample_id> <unique_sample_id> <dna_bam_path> <atac_bam_path> <bed_path>.
+        If <dna_bam_path> is left out, the pipeline will default to an rna-only
         analysis, which doesn't require dna reads but is more conservative.
         Modify this function as needed to provide a dictionary of sample_id
         keys and (fastq1, fastq1) values."""
@@ -21,14 +23,23 @@ if 'SAMP3' not in globals():
         samp_dict = {}
         for line in f:
             words = line.strip().split("\t")
-            if config['rna_only'] and len(words) == 4:
-                samp_dict[words[1]] = (words[3],)
-            elif len(words) == 3:
-                samp_dict[words[1]] = (words[2],)
-                # sanity check to make sure that rna_only is set to true
-                config['rna_only'] = True
+            if config['asoc']:
+                if config['rna_only'] and len(words)==5:
+                    samp_dict[words[1]] = (words[3],words[4])
+                elif len(words)==4:
+                    samp_dict[words[1]] = (words[2],words[3])
+                    config['rna_only'] = True
+                else:
+                    samp_dict[words[1]] = (words[2], words[3])
             else:
-                samp_dict[words[1]] = (words[2], words[3])
+                if config['rna_only'] and len(words) == 4:
+                    samp_dict[words[1]] = (words[3],)
+                elif len(words) == 3:
+                    samp_dict[words[1]] = (words[2],)
+                    # sanity check to make sure that rna_only is set to true
+                    config['rna_only'] = True
+                else:
+                    samp_dict[words[1]] = (words[2], words[3])
         return samp_dict
     SAMP3 = read_samples()
 
@@ -180,7 +191,9 @@ if config['rna_only']:
                 rules.extract_gq_scores.output[0].format(
                     vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
-            gene_info = config['gene_info']
+            targets_info = lambda wildcards: 
+                SAMP3[wildcards.sample][-1] if 'asoc' in config and config['asoc'] \
+                else config['gene_info']
         params:
             output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/",
             gq = lambda wildcards, input: config['default_gq'] if 'default_gq' in config \
@@ -194,7 +207,7 @@ if config['rna_only']:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts-rna.r {input.rna_counts} "
-            "{params.gq} {input.gene_info} {params.output_dir}"
+            "{params.gq} {input.targets_info} {params.output_dir}"
 
     rule detect_imbalance:
         """quantify allelic imbalance in genes for each sample"""
@@ -232,7 +245,9 @@ else:
                 rules.extract_gq_scores.output[0].format(
                     vcf_sample=SAMP_TO_VCF_ID[wildcards.sample]
                 ),
-            gene_info = config['gene_info']
+            targets_info = lambda wildcards: 
+                SAMP3[wildcards.sample][-1] if 'asoc' in config and config['asoc'] \
+                else config['gene_info']
         params:
             output_dir = lambda wildcards, output: str(Path(output[0]).parent)+"/",
             gq = lambda wildcards, input: config['default_gq'] if 'default_gq' in config \
@@ -247,7 +262,7 @@ else:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "prepare_counts.r {input.dna_counts} {input.rna_counts} "
-            "{params.gq} {input.gene_info} {params.output_dir}"
+            "{params.gq} {input.targets_info} {params.output_dir}"
 
     rule detect_imbalance:
         """quantify allelic imbalance in genes for each sample"""

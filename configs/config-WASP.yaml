@@ -4,29 +4,32 @@
 # their own data, as the Snakefile requires it.
 # All config options are required unless noted otherwise.
 
-# The path to a text file specifying where to find read information for each sample.
+
+# The path to a text file specifying where to find sorted BAM files for each sample.
 # Each row in the sample file should represent a different sample.
-# The sample file should have 5 columns (each separated by a single tab):
-#       <vcf_sample_id> <unique_sample_name> <dna_bam_path> <fastq1_rna_path> <fastq2_rna_path>
-# Or if you don't have a BAM file, you can leave it out to perform a more
-# conservative version of the ASE test (see the 'rna_only' config below)
+# The sample file should have 4 columns (each separated by a single tab):
+#       <vcf_sample_id> <unique_sample_name> <dna_bam_path> <rna_bam_path>
+# if asoc: true, sample file should have 5 columns:
+#   <vcf_sample_id> <unique_sample_name> <dna_bam_path> <atac_bam_path> <sample_peaks_bed_path>
+# dna_bam_path column can be omitted if rna_only set to true (below)
 "sample_file" : "data/samples.tsv"
+
+# If the <dna_bam_path> column is left out in the sample file, or if you set
+# the rna_only option below to true, the pipeline will default to running the
+# rna-only version of the analysis, in which DNA read counts are ignored. This
+# performs a more conservative test.
+"rna_only" : true
 
 # If your RNA-seq data is single-end instead of paired-end, set this config
 # to true. In that case, you can provide only one FASTQ file in each line of
-# the samples file above. Otherwise, if this option is set to a falsey value
+# the samples file above. Otherwise, if this option is set to a false value
 # or commented out, both FASTQs will be used.
-"unpaired": false
-
-# If you are working with ATAC-seq data instead of RNA-seq data, set this config
-# option to true. In that case, you must provide an extra BED file as the last
-# column of the sample file.
-"asoc": false
+"unpaired": true
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
 # Note: the FASTA file should not be gzipped
-"ref_genome" : "data/hg38.fa"
+"ref_genome" : "data/rn6.fa"
 
 # The path to a STAR index directory for "ref_genome"
 # If "ref_genome" is provided but not this, the pipeline will create the index
@@ -36,13 +39,7 @@
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
 # Make sure that the presence/absence of a chr prefix in this file matches what you have in your VCF (and your snp_h5_dir files if provided)!
-"chrom_info" : "data/chromInfo.txt.gz"
-
-# If the <dna_bam_path> column is left out in the sample file, or if you set
-# the rna_only option below to true, the pipeline will default to running the
-# rna-only version of the analysis, in which DNA read counts are ignored. This
-# performs a more conservative test.
-"rna_only" : true
+"chrom_info" : "data/rn6.chrom.sizes"
 
 # Gene annotation information in the GTF format.
 # These can usually be obtained from GENCODE (https://www.gencodegenes.org/human/)
@@ -52,28 +49,30 @@
 # If you provided a STAR index directory in 'ref_genome_star' above, you should
 # provide the same gtf that you used to create that index
 # Note: the GTF file should not be gzipped
-"gene_info" : "data/gencode.v26.GRCh38.genes.gtf"
+"gene_info" : "data/Rattus_norvegicus.Rnor_6.0.98.CHR.gtf"
 
 # If you have downloaded WASP from https://github.com/bmvdgeijn/WASP, specify the path to your WASP directory here
 # Otherwise, specify the location of the directory in which you'd like it installed
 # When this option is not provided, the pipeline will install WASP in your .snakemake directory
-"wasp_dir" : "WASP"
+"wasp_dir" : "/iblm/netapp/home/jezhou/WASP"
 
 # You can substitute ATAC-seq data for RNA-seq data!
 # Just set this config option to "true", so that the pipeline uses BWA instead of STAR
 # Also, you must provide a BWA-indexed reference genome via the "ref_genome" option (see above)
+# and you must provide an extra BED file as the last column of the sample file
 # This option will default to false if not provided
 "asoc": false
 
 # directory in which to output all of the output files
 # defined relative to whatever directory you execute the snakemake command in
-"output_dir" : "out"
+# "output_dir" : "asoc_out"
+"output_dir" : "ase_out"
 
 # A VCF file with which to run WASP. This can come from the variant calling pipeline
 # The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
 # It must also contain genotype quality (GQ) information. Otherwise, you must set
 # a default in "default_gq" below
-"vcf_file" : "data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.SHAPEIT2_phased.vcf.gz"
+"vcf_file" : "data/hs_1536_beagle_AWS_Jessica_RFIDs_12102020.vcf.gz"
 
 # Set this option to a default GQ value if your VCF lacks GQ information. This default
 # will be used for all variant records. We recommend a default of 20, which will
@@ -81,7 +80,7 @@
 # if the VCF had GQ tags
 # If this option is commented out or set to a falsey value, the pipeline will assume
 # GQ tags exist in the VCF you provided
-"default_gq": false
+"default_gq": 20
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location
