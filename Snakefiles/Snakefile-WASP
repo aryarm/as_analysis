@@ -8,11 +8,35 @@ min_version("5.18.0")
 
 include: "snp2h5_rules.smk"
 
+rule uncompress_ref:
+    """temporarily uncompress gzipped files for the STAR index"""
+    input:
+        ref = lambda wildcards: config['ref_genome']
+    output:
+        ref = temp(config['output_dir'] + "/ref_genome/"+Path(config['ref_genome']).stem)
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/WASP/uncompress_ref/all.tsv"
+    shell:
+        "gunzip -c {input.ref} > {output.ref}"
+
+rule uncompress_genes:
+    """temporarily uncompress gzipped files for the STAR index"""
+    input:
+        genes = config['gene_info']
+    output:
+        genes = temp(config['output_dir'] + "/ref_genome/"+Path(config['gene_info']).stem)
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/WASP/uncompress_genes/all.tsv"
+    shell:
+        "gunzip -c {input.genes} > {output.genes}"
+
 rule create_STAR_index:
     """create an index of the reference genome using STAR"""
     input:
-        ref = lambda wildcards: config['ref_genome'],
-        genes = config['gene_info']
+        ref = lambda wildcards: rules.uncompress_ref.output.ref if \
+            config['ref_genome'].endswith('.gz') else config['ref_genome'],
+        genes = rules.uncompress_genes.output.genes if \
+            config['gene_info'].endswith('.gz') else config['gene_info']
     params:
         overhang = config['sjdbOverhang'] if 'sjdbOverhang' in config and \
             config['sjdbOverhang'] else 100
@@ -26,6 +50,19 @@ rule create_STAR_index:
         "STAR --genomeDir {output} --runThreadN {threads} "
         "--sjdbOverhang {params.overhang} --runMode genomeGenerate "
         "--genomeFastaFiles {input.ref} --sjdbGTFfile {input.genes}"
+
+rule create_BWA_index:
+    """create an index of the reference genome using BWA"""
+    input:
+        ref = lambda wildcards: config['ref_genome']
+    params:
+        ref = lambda wildcards, output: output[0] + "/" + Path(config['ref_genome']).name
+    output: directory(config['output_dir'] + "/ref_genome/bwa_index")
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/WASP/create_BWA_index/all.tsv"
+    shell:
+        "ln -sf {input.ref} {params.ref} && "
+        "bwa index {params.ref}"
 
 rule map_STAR1:
     """map reads using STAR"""
@@ -54,7 +91,7 @@ rule map_BWA1:
     """map ATAC-seq reads using BWA-MEM"""
     input:
         fastq = lambda wildcards: SAMP2[wildcards.sample],
-        ref = config['ref_genome']
+        ref = lambda wildcards: config['ref_genome']
     output:
         config['output_dir'] + "/map1/{sample}/aln.bam"
     conda: "../envs/default.yaml"
@@ -143,7 +180,7 @@ rule map_BWA2:
     """map ATAC-seq reads using BWA-MEM"""
     input:
         fastq = rules.find_intersecting_snps.output.fastq,
-        ref = config['ref_genome']
+        ref = lambda wildcards: config['ref_genome']
     output:
         config['output_dir'] + "/map2/{sample}/aln.bam"
     conda: "../envs/default.yaml"

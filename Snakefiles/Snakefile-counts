@@ -89,6 +89,9 @@ rule get_as_counts:
         bam = lambda wildcards: SAMP3[wildcards.sample][
             wildcards.type == "rna" and not config['rna_only']
         ],
+        bam_idx = lambda wildcards: SAMP3[wildcards.sample][
+            wildcards.type == "rna" and not config['rna_only']
+        ]+".bai",
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
