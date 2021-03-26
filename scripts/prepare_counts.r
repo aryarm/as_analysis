@@ -22,6 +22,8 @@ if (file_ext(args[4]) == "gtf") {
   targets <- as(readGFF(args[4]), "GRanges")
 } else if (file_ext(args[4]) == "bed") {
   targets <- import(args[4], format = "bed")
+} else if (file_ext(args[3]) == "narrowPeak") {
+  targets <- import(args[3], format = "narrowPeak")
 }
 # what is the output directory prefix? note that it should have a trailing slash
 output_dir = args[5]
