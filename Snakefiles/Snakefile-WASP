@@ -216,8 +216,8 @@ rule rmdup:
     input:
         bam = rules.sort_filtered_bam.output.bam,
         index = rules.sort_filtered_bam.output.index,
-        rmdup_script = rules.get_WASP.output.rmdup_script if 'unpaired' in config and \
-            config['unpaired'] else rules.get_WASP.output.rmdup_pe_script
+        rmdup_script = rules.get_WASP.output.rmdup_script if check_config('unpaired') and \
+            not check_config('interleaved') else rules.get_WASP.output.rmdup_pe_script
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
         sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
