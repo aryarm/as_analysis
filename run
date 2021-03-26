@@ -43,7 +43,7 @@ fi
 # check: are we being executed from within qsub?
 if [ "$ENVIRONMENT" = "BATCH" ] || [[ $* == *--sge-cluster* ]]; then
 	snakemake \
-	--cluster "qsub -t 1 -V -j y -cwd -o $out_path/qlog" \
+	--cluster "qsub -pe iblm {threads} -V -j y -cwd -o $out_path/qlog" \
 	--config output_dir="$out_path" \
 	--latency-wait 60 \
 	--use-conda \
