@@ -67,6 +67,9 @@ proc_counts= function(counts, genes){
   message("- Removing ", sum(counts$N < 10), " SNPs that have low read counts")
   counts= subset(counts, N >= 10)
   num_old_counts = nrow(counts)
+  if (num_old_counts == 0) {
+    stop("Aborting: There weren't any SNPs left over after filtering")
+  }
   counts$end= counts$start
   counts= GRanges(counts)
   
