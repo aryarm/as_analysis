@@ -12,8 +12,8 @@ def check_config(value, default=False, place=config):
     return place[value] if (value in place and place[value]) else default
 
 no_variant_calling = check_config('vcf_file')
-unpaired = check_config('unpaired')
-asoc = check_config('asoc')
+unpaired = bool(check_config('unpaired'))
+asoc = bool(check_config('asoc'))
 
 def read_samples():
     """Function to get names and dna/rna fastq paths from a sample file
@@ -36,10 +36,10 @@ def read_samples():
     for line in f:
         words = line.strip().split("\t")
         if no_variant_calling:
-            if len(words) == (5-unpaired):
+            if len(words) == (5-unpaired+asoc):
                 fastq = words[3] if unpaired else (words[3], words[4])
                 samp_dict[words[1]] = (words[2], fastq)
-            elif len(words) == (4-unpaired):
+            elif len(words) == (4-unpaired+asoc):
                 # then the dna_bam_path hasn't been specified
                 fastq = words[2] if unpaired else (words[2], words[3])
                 samp_dict[words[1]] = (fastq,)
@@ -47,6 +47,8 @@ def read_samples():
                 config['rna_only'] = True
             else:
                 raise ValueError("The samples file is not formatted correctly for this line: "+line)
+            if asoc:
+                samp_dict[words[1]] += (words[-1],)
         else:
             samp_dict[words[0]] = ((words[1], words[2]), (words[3], words[4]))
     return samp_dict
@@ -81,7 +83,7 @@ if not no_variant_calling:
 # WASP pipeline
 if no_variant_calling:
     SAMP2 = {
-        samp: GLOBAL_SAMP[samp][0] if len(GLOBAL_SAMP[samp]) != 2 or asoc else GLOBAL_SAMP[samp][1]
+        samp: GLOBAL_SAMP[samp][-1-asoc]
         for samp in config['SAMP_NAMES']
     }
     def read_vcf_samples():
@@ -102,7 +104,7 @@ include: "Snakefiles/Snakefile-WASP"
 SAMP3 = {}
 for samp in config['SAMP_NAMES']:
     if no_variant_calling:
-        if len(GLOBAL_SAMP[samp]) == 2:
+        if len(GLOBAL_SAMP[samp]) == (2+asoc):
             dna = GLOBAL_SAMP[samp][0]
         else:
             config['rna_only'] = True
@@ -113,4 +115,6 @@ for samp in config['SAMP_NAMES']:
         SAMP3[samp] = (rna,)
     else:
         SAMP3[samp] = (dna, rna)
+    if asoc:
+        SAMP3[samp] += (GLOBAL_SAMP[samp][-1],)
 include: "Snakefiles/Snakefile-counts"
