@@ -27,8 +27,10 @@
 # and FASTQ file(s), respectively. You can also use '{output}' to refer to the
 # program's output. You can find the exact alignment command
 # by looking at the '@PG' tags in your BAM file's header.
+# Note that {input.fastq} will be replaced by two FASTQ files if the 'interleaved'
+# config option is true or, otherwise, if the 'unpaired' config option is true.
 # If not provided, this option defaults to a falsey value.
-"aln_cmd": "bwa mem -p -M -R '@RG\\tID:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tSM:Rat_Amygdala_cocaine_high\\tLB:MissingLibrary.1\\tPU:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tPL:ILLUMINA' {input.ref} {input.fastq} > {output}"
+"aln_cmd": "bwa mem -M -R '@RG\\tID:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tSM:Rat_Amygdala_cocaine_high\\tLB:MissingLibrary.1\\tPU:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tPL:ILLUMINA' {input.ref} {input.fastq} > {output}"
 
 # If your RNA-seq data is single-end instead of paired-end, set this config
 # to true. In that case, you can provide only one FASTQ file in each line of
@@ -38,6 +40,7 @@
 
 # If your RNA-seq data comes from a FASTQ file with interleaved paired end reads, set this config
 # option to true and the 'unpaired' config option to true, as well.
+# If the 'unpaired' config option is falsey, this config option will be ignored.
 "interleaved": true
 
 # The path to a reference genome
