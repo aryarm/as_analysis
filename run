@@ -19,7 +19,7 @@
 
 # you can specify a dir for all output here
 # it will override whatever value you set for the output_dir in the config file
-out_path="ase_out"
+out_path="out"
 mkdir -p "$out_path"
 
 # clear leftover log files

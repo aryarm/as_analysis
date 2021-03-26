@@ -20,11 +20,25 @@
 # performs a more conservative test.
 "rna_only" : true
 
+# If your RNA-seq or ATAC-seq data is provided as a BAM file instead of as
+# FASTQs, you can provide this command, which will be used in place of the
+# regular alignment command. Also, the first mapping step will be automatically
+# skipped. Use '{input.ref}' and '{input.fastq}' to refer to the ref genome
+# and FASTQ file(s), respectively. You can also use '{output}' to refer to the
+# program's output. You can find the exact alignment command
+# by looking at the '@PG' tags in your BAM file's header.
+# If not provided, this option defaults to a falsey value.
+"aln_cmd": "bwa mem -p -M -R '@RG\\tID:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tSM:Rat_Amygdala_cocaine_high\\tLB:MissingLibrary.1\\tPU:Rat_Amygdala_cocaine_high:MissingLibrary:1:HFYJTDRXX:2\\tPL:ILLUMINA' {input.ref} {input.fastq} > {output}"
+
 # If your RNA-seq data is single-end instead of paired-end, set this config
 # to true. In that case, you can provide only one FASTQ file in each line of
 # the samples file above. Otherwise, if this option is set to a falsey value
 # or commented out, both FASTQs will be used.
 "unpaired": true
+
+# If your RNA-seq data comes from a FASTQ file with interleaved paired end reads, set this config
+# option to true and the 'unpaired' config option to true, as well.
+"interleaved": true
 
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
