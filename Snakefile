@@ -13,6 +13,7 @@ def check_config(value, default=False, place=config):
 
 no_variant_calling = check_config('vcf_file')
 unpaired = check_config('unpaired')
+asoc = check_config('asoc')
 
 def read_samples():
     """Function to get names and dna/rna fastq paths from a sample file
@@ -80,7 +81,7 @@ if not no_variant_calling:
 # WASP pipeline
 if no_variant_calling:
     SAMP2 = {
-        samp: GLOBAL_SAMP[samp][1] if len(GLOBAL_SAMP[samp]) == 2 else GLOBAL_SAMP[samp][0]
+        samp: GLOBAL_SAMP[samp][0] if len(GLOBAL_SAMP[samp]) != 2 or asoc else GLOBAL_SAMP[samp][1]
         for samp in config['SAMP_NAMES']
     }
     def read_vcf_samples():
