@@ -2,7 +2,7 @@ suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
 suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
-library(tools)
+suppressMessages(library(tools))
 
 args = commandArgs(trailingOnly = TRUE)
 # import dna counts for this sample
@@ -81,6 +81,9 @@ proc_counts= function(counts, genes){
   counts$gene= genes$gene_id
   counts= counts[!duplicated(counts),]
   message("- Removed ", num_old_counts-nrow(counts), " SNPs that have don't overlap a gene")
+  if (nrow(counts) == 0) {
+    stop("Aborting! There aren't any SNPs that lie within the target regions.")
+  }
   counts
 }
 

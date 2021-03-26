@@ -2,7 +2,7 @@ suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
 suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
-library(tools)
+suppressMessages(library(tools))
 
 args = commandArgs(trailingOnly = TRUE)
 # import counts for this sample
@@ -64,7 +64,7 @@ proc_counts= function(counts, targets){
   counts= subset(counts, N >= 10)
   num_old_counts = nrow(counts)
   if (num_old_counts == 0) {
-    stop("Aborting: There weren't any SNPs left over after filtering")
+    stop("Aborting! There aren't any SNPs with a sufficient number of supporting reads.")
   }
   counts$end= counts$start
   counts= GRanges(counts)
@@ -77,6 +77,9 @@ proc_counts= function(counts, targets){
   counts$target= targets$gene_id
   counts= counts[!duplicated(counts),]
   message("- Removed ", num_old_counts-nrow(counts), " SNPs that don't overlap a target region")
+  if (nrow(counts) == 0) {
+    stop("Aborting! There aren't any SNPs that lie within the target regions.")
+  }
   counts
 }
 
