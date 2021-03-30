@@ -30,5 +30,5 @@ When calling [Snakemake](http://snakemake.readthedocs.io/en/stable/getting_start
 The counts pipeline creates the following directories under the output directory specified in your config file. The `final` folder will contain the final output, a list of the resulting genes with allelic imbalance and their confidence.
  - genotypes - your input VCF, split by chromosome (if your VCF isn't already in the HDF5 format)
  - extract_gq - tables containing GQ scores for each of the samples in the input VCF
- - as_counts - allele-specific dna and rna read counts for all SNPs in the VCF
+ - as_counts - allele-specific dna and rna read counts for all SNPs in the VCF from the output of [the `--txt_counts` argument of WASP's bam2h5.py script](https://github.com/bmvdgeijn/WASP/blob/master/CHT/README.bam2h5.md)
  - final - prepared counts and results of running the [allele_imbalance script](/scripts/allele_imbalance.r): genes with allelic imbalance and their FDR corrected p-value
