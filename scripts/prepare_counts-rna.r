@@ -15,13 +15,14 @@ if (use_default_gq) {
   gq = read.table(gzfile(args[2]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"))
 }
 # import gene info from gencode
-targets <- NULL
-if (file_ext(args[3]) == "gtf") {
-  targets <- as(readGFF(args[3]), "GRanges")
+if (file_ext(args[3]) == "gtf" | file_ext(args[3]) == "gff") {
+  targets = as(readGFF(args[3]), "GRanges")
 } else if (file_ext(args[3]) == "bed") {
-  targets <- import(args[3], format = "bed")
+  targets = import(args[3], format = "bed")
 } else if (file_ext(args[3]) == "narrowPeak") {
-  targets <- import(args[3], format = "narrowPeak")
+  targets = import(args[3], format = "narrowPeak")
+} else {
+  stop("Aborting! Targets file extension is not supported. Must be one of gtf, gff, bed, or narrowPeak.")
 }
 
 # what is the output directory prefix? note that it should have a trailing slash
@@ -70,13 +71,19 @@ proc_counts= function(counts, targets){
   }
   counts$end= counts$start
   counts= GRanges(counts)
+
+  message("Make sure these match up!\nTargets seqStyle: ", seqlevelsStyle(targets), "\nCounts seqStyle: ", seqlevelsStyle(counts))
   
   # step 2 add targets
   hits= findOverlaps(counts, targets, type = "within")
   names(counts) = NULL
   counts= as.data.frame(counts[queryHits(hits)])
   targets= as.data.frame(targets[subjectHits(hits)])
-  counts$target= targets$gene_id
+  if ("gene_id" %in% colnames(targets)){
+    counts$target = targets$gene_id
+  } else {
+    counts$target = paste(paste(targets$seqnames, targets$start, sep=":"), targets$end, sep="-")
+  }
   counts= counts[!duplicated(counts),]
   message("- Removed ", num_old_counts-nrow(counts), " SNPs that don't overlap a target region")
   if (nrow(counts) == 0) {

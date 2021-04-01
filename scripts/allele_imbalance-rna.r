@@ -34,7 +34,7 @@ allele.imbalance<- function(rna, rna.err){
    disp.rna = m0$par
    
    # get genes
-   genes= as.character(unique(rna$gene))
+   targets = as.character(unique(rna$target))
    
    # allelic.imbalance  is how far proportion is away from 0.5
    # first site : L( x | allelic.imbalance)=het.like* P( x | 0.5 + allelic.imbalance) + err.like
@@ -44,7 +44,7 @@ allele.imbalance<- function(rna, rna.err){
    myfunc<- function(i){
       #Step 1 subset by gene
       # rna
-      rna= rna[rna$gene %in% genes[i],]
+      rna= rna[rna$target %in% targets[i],]
       rna= rna[order(rna$start),]
       
       # step 2 likelihood estimate
@@ -107,10 +107,10 @@ allele.imbalance<- function(rna, rna.err){
       # Likelihood ratio test
       lrt.stat <- 2 * (null.ll - alt.ll)
       pval <- pchisq(lrt.stat, df=1, lower.tail=F)
-      result= data.frame(gene= genes[i], pval =pval, d= estimate)
+      result= data.frame(target= targets[i], pval =pval, d= estimate)
       return(result)
    }
-   rlist= llply(1:length(genes), myfunc)
+   rlist= llply(1:length(targets), myfunc)
    res= do.call(rbind,rlist)
    res$fdr= p.adjust(res$pval, "fdr")
    return(res)

@@ -17,13 +17,14 @@ if (use_default_gq) {
   gq = read.table(gzfile(args[3]), sep="\t", header=F, col.names=c("CHROM", "POS", "REF", "ALT", "GQ"), stringsAsFactors=F)
 }
 # import gene info from gencode
-targets <- NULL
-if (file_ext(args[4]) == "gtf") {
-  targets <- as(readGFF(args[4]), "GRanges")
+if (file_ext(args[4]) == "gtf" | file_ext(args[4]) == "gff") {
+  targets = as(readGFF(args[4]), "GRanges")
 } else if (file_ext(args[4]) == "bed") {
-  targets <- import(args[4], format = "bed")
-} else if (file_ext(args[3]) == "narrowPeak") {
-  targets <- import(args[3], format = "narrowPeak")
+  targets = import(args[4], format = "bed")
+} else if (file_ext(args[4]) == "narrowPeak") {
+  targets = import(args[4], format = "narrowPeak")
+} else {
+  stop("Aborting! Targets file extension is not supported. Must be one of gtf, gff, bed, or narrowPeak.")
 }
 # what is the output directory prefix? note that it should have a trailing slash
 output_dir = args[5]
@@ -60,7 +61,7 @@ if (use_default_gq) {
 }
 
 # process allele specific counts
-proc_counts= function(counts, genes){
+proc_counts= function(counts, targets){
   # load counts and proportions
   counts$N=rowSums(counts[,c("ref.matches","alt.matches")])
   counts$ref_prop= counts$ref.matches/counts$N
@@ -74,15 +75,21 @@ proc_counts= function(counts, genes){
   }
   counts$end= counts$start
   counts= GRanges(counts)
+
+  message("Make sure these match up!\nTargets seqStyle: ", seqlevelsStyle(targets), "\nCounts seqStyle: ", seqlevelsStyle(counts))
   
   # step 2 add genes
-  hits= findOverlaps(counts, genes, type = "within")
+  hits= findOverlaps(counts, targets, type = "within")
   names(counts) = NULL
   counts= as.data.frame(counts[queryHits(hits)])
-  genes= as.data.frame(genes[subjectHits(hits)])
-  counts$gene= genes$gene_id
+  targets= as.data.frame(targets[subjectHits(hits)])
+  if ("gene_id" %in% colnames(targets)){
+    counts$target = targets$gene_id
+  } else {
+    counts$target = paste(paste(targets$seqnames, targets$start, sep=":"), targets$end, sep="-")
+  }
   counts= counts[!duplicated(counts),]
-  message("- Removed ", num_old_counts-nrow(counts), " SNPs that have don't overlap a gene")
+  message("- Removed ", num_old_counts-nrow(counts), " SNPs that have don't overlap a target region")
   if (nrow(counts) == 0) {
     stop("Aborting! There aren't any SNPs that lie within the target regions.")
   }

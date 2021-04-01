@@ -213,7 +213,9 @@ if config['rna_only']:
         """quantify allelic imbalance in genes for each sample"""
         input:
             rna = rules.prepare_counts.output.rna,
-            gene_info = config['gene_info']
+            targets_info = lambda wildcards:
+                SAMP3[wildcards.sample][-1] if 'asoc' in config and config['asoc'] \
+                else config['gene_info']
         params:
             imbalance_script_path = "scripts/allele_imbalance-rna.r"
         output:
@@ -225,7 +227,7 @@ if config['rna_only']:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance-rna.r {params.imbalance_script_path} "
-            "{input.rna} {input.gene_info} "
+            "{input.rna} {input.targets_info} "
             "| gzip >{output}"
 else:
     rule prepare_counts:
@@ -269,7 +271,9 @@ else:
         input:
             dna = rules.prepare_counts.output.dna,
             rna = rules.prepare_counts.output.rna,
-            gene_info = config['gene_info']
+            targets_info = lambda wildcards:
+                SAMP3[wildcards.sample][-1] if 'asoc' in config and config['asoc'] \
+                else config['gene_info']
         params:
             imbalance_script_path = "scripts/allele_imbalance.r"
         output:
@@ -281,5 +285,5 @@ else:
         shell:
             "Rscript --no-save --no-restore scripts/"
             "find_imbalance.r {params.imbalance_script_path} "
-            "{input.dna} {input.rna} {input.gene_info} "
+            "{input.dna} {input.rna} {input.targets_info} "
             "| gzip >{output}"

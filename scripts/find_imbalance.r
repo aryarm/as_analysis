@@ -2,6 +2,7 @@ suppressMessages(library(plyr))
 suppressMessages(library(rmutil))
 suppressWarnings(suppressMessages(library(rtracklayer)))
 suppressMessages(library(dplyr))
+suppressMessages(library(tools))
 
 args = commandArgs(trailingOnly = TRUE)
 # args[1] should be the path to a file in which the allele.imbalance function is defined: allele.imbalance(rna, dna, rna.err, dna.err)
@@ -10,7 +11,15 @@ source(args[1])
 dna = read.csv(gzfile(args[2]))
 rna = read.csv(gzfile(args[3]))
 # import gene info from gencode
-genes = readGFF(args[4])
+# import gene info from gencode
+if (file_ext(args[3]) == "gtf" | file_ext(args[3]) == "gff") {
+  targets = readGFF(args[3])
+  add_genes = TRUE
+} else if (file_ext(args[3]) == "bed" | file_ext(args[3]) == "narrowPeak") {
+  add_genes = FALSE
+} else {
+  stop("Aborting! Targets file extension is not supported. Must be one of gtf, gff, bed, or narrowPeak.")
+}
 
 # calculate error rates
 err.rate = function(ref, alt, err){
@@ -29,20 +38,22 @@ rna.err = err.rate(rna$ref.matches, rna$alt.matches, rna$errors)
 # 	N (total allele count - ref+alt),
 # 	genotype.error (ie 10^(-GQ/10) - only appears in dna DF),
 # 	rsID (<chr>:<pos>_<allele1>/<allele2>),
-# 	gene (name of gene that this SNP appears in, as rnaovided by gencode),
+# 	target (name of gene/peak that this SNP appears in, as provided by gencode),
 #   start (position of SNP)
-dna = dna[c('ref.matches', 'N', 'genotype.error', 'rsID', 'gene', 'start')]
-rna = rna[c('ref.matches', 'N', 'rsID', 'gene', 'start')]
+dna = dna[c('ref.matches', 'N', 'genotype.error', 'rsID', 'target', 'start')]
+rna = rna[c('ref.matches', 'N', 'rsID', 'target', 'start')]
 # call allele_imbalance and store the result in res
 message("Calling allele.imbalance on ", nrow(dna), " SNPs...")
 res = as.data.frame(allele.imbalance(rna, dna, rna.err, dna.err))
 
 # rename col 'd' to 'a', since it represents estimates of allelic imbalance
 colnames(res)[which(names(res) == "d")] = "a"
-# convert gene col from type factor to type char so dplyr is happy
-res$gene = as.character(res$gene)
-# add gene names to res. it only has gene_id right now
-message("Adding gene names to ", nrow(res)," genes...")
-res = left_join(res, unique(genes[, c("gene_name", "gene_id")]), by = c("gene"="gene_id"))
+if (add_genes) {
+  # convert gene col from type factor to type char so dplyr is happy
+  res$gene = as.character(res$gene)
+  # add gene names to res. it only has gene_id right now
+  message("Adding gene names to ", nrow(res)," genes...")
+  res = left_join(res, unique(genes[, c("gene_name", "gene_id")]), by = c("gene"="gene_id"))
+}
 message("Writing ", nrow(res), " genes to file...\n")
 write.csv(res, stdout(), row.names = F, quote = F)
