@@ -12,6 +12,12 @@
 # conservative version of the ASE test (see the 'rna_only' config below)
 "sample_file" : "data/samples.tsv"
 
+# If your RNA-seq data is single-end instead of paired-end, set this config
+# to true. In that case, you can provide only one FASTQ file in each line of
+# the samples file above. Otherwise, if this option is set to a falsey value
+# or commented out, both FASTQs will be used.
+"unpaired": false
+
 # The path to a reference genome
 # This is not required if "ref_genome_star" is provided below
 # Note: the FASTA file should not be gzipped

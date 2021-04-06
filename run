@@ -67,7 +67,8 @@ if command -v 'slack' &>/dev/null; then
 	if [ "$exit_code" -eq 0 ]; then
 		slack "snakemake finished successfully" &>/dev/null
 	else
-		slack "$(tail -n4 "$out_path/log")" &>/dev/null
+        slack "snakemake as_analysis job failed" &>/dev/null
+        slack "$(tail -n4 "$out_path/log")" &>/dev/null
 	fi
 fi
 exit "$exit_code"

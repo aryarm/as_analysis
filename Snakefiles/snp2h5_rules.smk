@@ -12,7 +12,8 @@ rule get_WASP:
     output:
         find_intersecting_snps_script = config['wasp_dir'] + "/mapping/find_intersecting_snps.py",
         filter_remapped_reads_script = config['wasp_dir'] + "/mapping/filter_remapped_reads.py",
-        rmdup_script = config['wasp_dir'] + "/mapping/rmdup_pe.py",
+        rmdup_script = config['wasp_dir'] + "/mapping/rmdup.py",
+        rmdup_pe_script = config['wasp_dir'] + "/mapping/rmdup_pe.py",
         bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
         makefile = config['wasp_dir'] + "/snp2h5/Makefile"
     conda: "../envs/default.yaml"
